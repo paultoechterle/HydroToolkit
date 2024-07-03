@@ -488,6 +488,22 @@ def get_unique_colors(n: int) -> list[str]:
         raise ValueError("Requested number of colors exceeds the available CSS4 colors.")
     return random.sample(xkcd_colors, n)
 
+def GMWL(limit = (-25,5)) -> dict:
+    """
+    Generate the Global Meteoric Water Line (GMWL) based on the given limit.
+
+    Parameters:
+    limit (tuple): A tuple representing the range of d18o values. Default is (-25, 5).
+
+    Returns:
+    dict: A dictionary containing the d18o and d2h values of the GMWL.
+
+    """
+    d18o = np.linspace(limit[0], limit[1], 5)
+    d2h = 8 * d18o + 10
+    gmwl = {'d18o': d18o, 'd2h': d2h}
+    return gmwl
+
 # GZÜV Readout from excel sheets and data Handling
 class GZUV:
     def __init__(self, path:str):
