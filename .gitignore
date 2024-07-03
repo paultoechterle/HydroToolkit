@@ -1,0 +1,20 @@
+# Ignore build artifacts
+build/
+dist/
+Tests/
+*.egg-info/
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+
+# Ignore data and plot directories
+hydrotoolkit/data/
+hydrotoolkit/plots/
+
+# Ignore temporary files
+.DS_Store
+*.swp
+
+# Ignore virtual environment
+venv/
