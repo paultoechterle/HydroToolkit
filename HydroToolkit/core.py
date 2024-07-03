@@ -489,6 +489,12 @@ class Spring(Station):
     def __init__(self, data_paths: dict = None, metadata_path: str = None, 
                  data_frame: pd.DataFrame = None, metadata: dict = None, resolution: str = 'D'):
         super().__init__(data_paths, metadata_path, data_frame, metadata, resolution)
+        
+        try:
+            self.isotopes = utils.iso_df_mean.loc[int(self.stammdaten['HZB-Nummer'])]
+        except ValueError:
+            print('No isotope data found for this station')
+            self.isotopes = None 
 
     def get_translate_unit(self):
         return {
