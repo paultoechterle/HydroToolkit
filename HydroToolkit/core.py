@@ -494,7 +494,114 @@ class Spring(Station):
             self.isotopes = utils.iso_df_mean.loc[int(self.stammdaten['HZB-Nummer'])]
         except ValueError:
             print('No isotope data found for this station')
-            self.isotopes = None 
+            self.isotopes = None
+        except KeyError:
+            print('No isotope data found for this station')
+            self.isotopes = None
+
+    def mean_catchment_elevation(self, spring_elevation:float, plot:bool=False):
+        """
+        Calculate the mean catchment elevation based on precipitation isotope data.
+
+        Parameters:
+        - spring_elevation (float): The elevation of the spring in meters.
+        - plot (bool, optional): Whether to plot the regression line and data points. Default is False.
+
+        Returns:
+        - catchment_elevation (float): The calculated mean catchment elevation in meters.
+        - fig, ax (matplotlib.figure.Figure, matplotlib.axes.Axes): The figure and axes objects if plot=True.
+
+        Note:
+        - This method requires the 'isotopes' attribute to be set with sping isotope data.
+
+        """
+        if self.isotopes is None:
+            print('No isotope data found for this station. Cannot calculate catchment elevation.')
+            return None
+        
+        # get the lapse rate from precipitation stations:
+        # load precipitation isotope data
+        pfad = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\06-Isotopendaten\Qualitaetsdatenabfrage_20240703_1337.csv"
+        cols = {
+            'GZÜV-ID': 'gzuv_id',
+            'Name': 'name',
+            'Gemeindename': 'gemeindename',
+            'Höhe Messpunkt': 'hohe',
+            'Monat': 'monat',
+            'Lfd. Nummer': 'lfd_nummer',
+            'Probenahme-Beginn TT-MM-JJJJ': 'probenahme_beginn',
+            'Probenahme-(Ende) TT-MM-JJJJ': 'probenahme_ende',
+            'Flaschengewicht g': 'flaschengewicht',
+            'Niederschlag - Monatssumme (mm)': 'niederschlag_monatssumme',
+            'Laborcode - Niederschlag I104': 'laborcode_niederschlag',
+            'Niederschlag - Art': 'niederschlag_art',
+            'Lufttemperatur - Monatsmittel (°C)': 'lufttemperatur_monatsmittel',
+            'Laborcode - Lufttemperatur I107': 'laborcode_lufttemperatur',
+            'Potentielle Verdunstung - Monatssumme (mm)': 'potentielle_verdunstung_monatssumme',
+            'Laborcode - Pot. Verdunstung I110': 'laborcode_verdunstung',
+            'Pegelstand cm': 'pegelstand_cm',
+            'Durchfluss m³/s': 'durchfluss_m3_s',
+            'Delta 18O (? VSMOW)': 'd18o',
+            'Messgenauigkeit Delta 18O (?)': 'messgenauigkeit_delta_18o',
+            'Laborcode - 18O I114': 'laborcode_18o',
+            'Delta  2H (? VSMOW)': 'd2h',
+            'Messgenauigkeit Delta 2H (?)': 'messgenauigkeit_delta_2h',
+            'Laborcode - Deuterium I117': 'laborcode_deuterium',
+            'Tritium - 3H (TE)': 'tritium',
+            'Messgenauigkeit Tritium 3H': 'messgenauigkeit_tritium',
+            'Laborcode - Tritium I120': 'laborcode_tritium',
+            'freies Luftvolumen (ml) bis 2003': 'freies_luftvolumen',
+            'Unnamed: 28': 'unnamed_28'
+        }
+        df = pd.read_csv(pfad, sep=';', encoding='latin1', skiprows=36)
+        df = df.rename(columns=cols)
+        
+        # create timestamps
+        df['datetime'] = pd.to_datetime(df['probenahme_ende'], dayfirst=True, errors='coerce')
+        df['month'] = df['datetime'].dt.month
+
+        # create monthly averages for each station
+        dfs = []
+        for station in df.gzuv_id.unique():
+            station_df = df[df.gzuv_id == station]
+            station_means = station_df.groupby('month').d18o.agg(['mean', 'std'])
+            # add elevation and station name
+            station_means['elevation'] = np.full_like(station_means['mean'], station_df.hohe.unique()[0])
+            station_means['name'] = [station_df.name.unique()[0] for i in station_means.index]
+            dfs.append(station_means)
+        # concatenate all stations
+        df_monthly = pd.concat(dfs)
+        df_monthly.reset_index(inplace=True)
+
+        # create annual averages for each station
+        df_annual = df_monthly.groupby('name')['mean'].agg(['mean', 'std'])
+        df_annual['elevation'] = df_monthly.groupby('name')['elevation'].min()
+
+        # calculate lapse rate
+        # use linear regression on annual d18o values vs elevation
+        from sklearn.linear_model import LinearRegression
+        x = df_annual['elevation'].values.reshape(-1, 1)
+        y = df_annual['mean'].values.reshape(-1, 1)
+        reg = LinearRegression().fit(x, y)
+        slope = reg.coef_[0][0]
+        intercept = reg.intercept_[0]
+        r_squared = reg.score(x, y)
+        print(f'slope per 100m: {slope*100:.2f}, intercept: {intercept:.2f}, R²: {r_squared:.2f}')
+
+        # project measured spring d18O onto precipitation lapse rate
+        catchment_elevation = (self.isotopes.d18o['mean'] - intercept) / slope
+        print(f'Mean Catchment elevation: {catchment_elevation:.0f} m')
+
+        if plot:
+            fig, ax = plt.subplots()
+            ax.plot(df_annual['elevation'], df_annual['mean'], 'o', label='Niederschlagsstationen')
+            ax.plot(x, reg.predict(x), 'k-', label='Regressionslinie')
+            ax.errorbar(x=spring_elevation, y=self.isotopes.d18o['mean'], 
+                        yerr=self.isotopes.d18o['std'], marker='o', label='Quelle')
+            ax.set(xlabel='Elevation [m]', ylabel=r'$\delta^{18}O$ [‰]')
+            return fig, ax
+        
+        return catchment_elevation
 
     def get_translate_unit(self):
         return {
