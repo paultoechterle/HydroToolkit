@@ -542,6 +542,52 @@ class Spring(Station):
         print(f'''Mean discharge = {Q0:.0f} l/s \nMean annual Discharge = {Q_annual/1000:.2} m³ \nMean storage Volume = {V0:.4} m³ \nt(1/2) = {t05:.0f} days \nMean residence time = {tau*365.25:.0f} days''')
         return t05, V0, tau
     
+    def plot_isotope_crossplot(self, HZBnr: int=None, save: bool=False, path: str='ISOCP.png') -> tuple:
+        """
+        Plots the isotope crossplot for a given HZB number.
+
+        Parameters:
+        - HZBnr (int): The HZB number of the station. If None, the HZB number from the 'stammdaten' attribute will be used.
+
+        Returns:
+        - tuple: A tuple containing the figure and axis objects of the plot.
+
+        Note:
+        - The function requires the 'stammdaten' attribute to be set before calling this function.
+        - The function reads data from the file '24-06-11 Isotopendaten Quellen Tirol_DatenBML.xlsx' located at 'M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\'.
+        - The function plots the isotope data for all stations, the Global Meteoric Water Line (GMWL), and the specific station based on the HZB number.
+        """
+        
+        if HZBnr is None:
+            HZBnr = int(self.stammdaten['HZB-Nummer'])
+
+        file = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\24-06-11 Isotopendaten Quellen Tirol_DatenBML.xlsx"
+        df = pd.read_excel(file)
+        station_df = df[df['HZB-Nr.'] == HZBnr].dropna(subset=['Sauerstoff-18 [‰ V-SMOW]', 'Deuterium [‰ V-SMOW]'])
+        gmwl = utils.GMWL((df['Sauerstoff-18 [‰ V-SMOW]'].min(),
+                        df['Sauerstoff-18 [‰ V-SMOW]'].max()))
+        
+        if station_df.empty:
+            print('No data for station found')
+        else:
+            fig, ax = plt.subplots(figsize=(page*0.5, 0.4*page))
+            ax.plot(df['Sauerstoff-18 [‰ V-SMOW]'], df['Deuterium [‰ V-SMOW]'], 
+                    '.', label='Alle Stationen', color='gray', alpha=0.5)
+            ax.plot(gmwl['d18o'], gmwl['d2h'], 'k--', label='GMWL')
+            ax.plot(station_df['Sauerstoff-18 [‰ V-SMOW]'], 
+                    station_df['Deuterium [‰ V-SMOW]'], 'o', 
+                    label=self.stammdaten['Messstelle'])
+            ax.set_xlabel(r'$\delta^{18}O$ [‰]')
+            ax.set_ylabel(r'$\delta^{2}H$ [‰]')
+            
+            ax.legend()
+            plt.tight_layout()
+            if save:
+                savepath = path if path else f'plots/{self.stammdaten["Messstelle"]}_ISOCP.png'
+                plt.savefig(savepath, dpi=300)
+            return fig, ax
+        return None
+    
 class River(Station):
     def __init__(self, data_paths: dict = None, metadata_path: str = None, 
                  data_frame: pd.DataFrame = None, metadata: dict = None, resolution: str = 'D'):
