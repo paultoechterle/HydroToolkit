@@ -1,0 +1,54 @@
+# Set color cycle:
+axes.prop_cycle : cycler('color', ['0099ff', '89b576', 'f27977', 'ff6699', '99e6ff', '006600', 'fae6ff'])
+
+# Set default figure size
+figure.figsize : 3.5, 2.625
+figure.dpi : 200
+savefig.dpi : 300
+figure.autolayout: True
+
+# Font and size
+font.family : Arial
+font.size : 8
+axes.titlesize : 9
+axes.labelsize : 9
+ytick.labelsize : 8
+xtick.labelsize : 8
+
+# Set x axis
+xtick.direction : in
+xtick.major.size : 3
+xtick.major.width : 0.3
+xtick.minor.size : 1.5
+xtick.minor.width : 0.3
+xtick.minor.visible : True
+xtick.top : True
+
+# Set y axis
+ytick.direction : in
+ytick.major.size : 3
+ytick.major.width : 0.3
+ytick.minor.size : 1.5
+ytick.minor.width : 0.3
+ytick.minor.visible : True
+ytick.right : True
+
+# Set grid
+axes.grid : True
+grid.linestyle: --
+grid.linewidth: 0.3
+
+# Legend
+legend.fancybox : False
+legend.title_fontsize : 6
+legend.fontsize : 6
+
+# Set line widths
+axes.linewidth : 0.5
+lines.linewidth : 0.7
+
+# Plot specific parameters
+errorbar.capsize: 2
+patch.linewidth: 0.7
+lines.markeredgecolor: black
+lines.markersize: 4
