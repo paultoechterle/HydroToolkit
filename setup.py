@@ -11,14 +11,22 @@ setup(
         'scipy',
         'seaborn',
         'requests',
-        'pymannkendall'
+        'pymannkendall',
+        'os',
+        'typing',
+        'random',
+        're',
+        'functools',
+        'wqchartpy',
+        'sklearn'
     ],
+
     author='Paul Töchterle',
     author_email='paul.m.teochterle@gmail.com',
     description='A package for hydrogeological timeseries data analysis and plotting',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/paultoechterle/hydrogeo_analysis',
+    url='https://github.com/paultoechterle/HydroToolkit.git',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
