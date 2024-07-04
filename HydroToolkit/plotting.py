@@ -43,13 +43,16 @@ class Plotter:
     def plot_timeseries(self, variables: list, filter: bool = False,
                         trend: bool = False, daily: bool = True):
         """
-        Plot time series for the specified variables.
+        Plot time series for the specified variables. You may select variables to plot,
+        apply a filter to the data, and plot a seasonal Mann-Kendall trend line.
+        The trend is only plotted if p-value < 0.05.
 
         Args:
             variables (list): List of variables to plot.
             filter (bool): Whether to plot filtered data. Defaults to False.
             trend (bool): Whether to plot seasonal Mann-Kendall trend line. Defaults to False.
-            daily (bool): Whether to use daily data. Defaults to True.
+            daily (bool): Whether to use daily data. If set False, the native 
+            resolution of the data will be used. Defaults to True.
 
         Returns:
             tuple: (fig, axes) Matplotlib figure and axes.
@@ -539,7 +542,7 @@ class Plotter:
 
         # Style plot
         ax.legend()
-        ax.set(xlabel='Lags [Days]', ylabel='Correlation', xlim=(-400, 400), ylim=(-1, 1))
+        ax.set(xlabel='Versatz [Tage]', ylabel='Korrelation', xlim=(-400, 400), ylim=(-1, 1))
         plt.grid(False)
 
         plt.tight_layout()

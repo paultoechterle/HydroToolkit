@@ -411,11 +411,12 @@ class Station:
 
         return fig, ax
 
-    def plot_timeseries(self, variables: list=None, filter:bool=False, daily:bool=True,
+    def plot_timeseries(self, variables: list=None, trend: bool=False, 
+                        filter: bool=False, daily:bool=True,
                         save:bool=False, path:str='ts.png'):
         if variables is None:
             variables = self.variables
-        fig, axes = self.plotter.plot_timeseries(variables, filter=filter, 
+        fig, axes = self.plotter.plot_timeseries(variables, filter=filter, trend=trend, 
                                                   save=save, path=path, daily=daily)
         return fig, axes
 
@@ -664,7 +665,7 @@ class Spring(Station):
         print(f'''Mean discharge = {Q0:.0f} l/s \nMean annual Discharge = {Q_annual/1000:.2} m³ \nMean storage Volume = {V0:.4} m³ \nt(1/2) = {t05:.0f} days \nMean residence time = {tau*365.25:.0f} days''')
         return t05, V0, tau
     
-    def plot_chemisty(self, kind: str = 'piper'):
+    def plot_chemisty(self, kind: str = 'piper', path = 'plots/'):
             """
             Plot the chemistry data for a specific station using different 
             plot types.
@@ -704,15 +705,15 @@ class Spring(Station):
 
             # generate plots
             if kind == 'piper':
-                triangle_piper.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_piper', figformat='png')
+                triangle_piper.plot(station_df, unit='mg/L', figname= path + self.stammdaten['Messstelle'] + '_piper', figformat='png')
             # elif kind == 'stiff':
-            #     stiff.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_stiff', figformat='png')
+            #     stiff.plot(station_df, unit='mg/L', figname= path + self.stammdaten['Messstelle'] + '_stiff', figformat='png')
             elif kind == 'gibbs':
-                gibbs.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_gibbs', figformat='png')
+                gibbs.plot(station_df, unit='mg/L', figname= path + self.stammdaten['Messstelle'] + '_gibbs', figformat='png')
             elif kind == 'schoeller':
-                schoeller.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_schoeller', figformat='png')
+                schoeller.plot(station_df, unit='mg/L', figname= path + self.stammdaten['Messstelle'] + '_schoeller', figformat='png')
             elif kind == 'chadha':
-                chadha.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_chadha', figformat='png')
+                chadha.plot(station_df, unit='mg/L', figname= path + self.stammdaten['Messstelle'] + '_chadha', figformat='png')
             return None
     
     def plot_isotope_crossplot(self, HZBnr: int=None, save: bool=False, path: str='ISOCP.png') -> tuple:
