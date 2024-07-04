@@ -594,11 +594,19 @@ class Spring(Station):
 
         if plot:
             fig, ax = plt.subplots()
-            ax.plot(df_annual['elevation'], df_annual['mean'], 'o', label='Niederschlagsstationen')
-            ax.plot(x, reg.predict(x), 'k-', label='Regressionslinie')
+            # plot precipitation stations
+            ax.plot(df_annual['elevation'], df_annual['mean'], color=colors[1], 
+                    marker='o', lw=0, label='Niederschlagsstationen')
+            # plot regression line
+            ax.plot(x, reg.predict(x), color=colors[1], lw=0.7, label='Regressionslinie')
+            # plot spring with error bars
             ax.errorbar(x=spring_elevation, y=self.isotopes.d18o['mean'], 
-                        yerr=self.isotopes.d18o['std'], marker='o', label='Quelle')
+                        yerr=self.isotopes.d18o['std'], marker='o', lw=0,
+                        color=colors[0], label='Quelle')
+            # style plot
             ax.set(xlabel='Elevation [m]', ylabel=r'$\delta^{18}O$ [‰]')
+            ax.legend()
+            plt.tight_layout()
             return fig, ax
         
         return catchment_elevation
@@ -679,7 +687,7 @@ class Spring(Station):
             try:
                 id = int(self.stammdaten['HZB-Nummer'])
             except ValueError:
-                print('No HZB-Nummer found')
+                print('No HZB-Nummer found. Chemistry data is only available for springs in the GZÜV Programme.')
                 return None
             
             chem_df = utils.GZUV(gzuv_path).df
