@@ -542,6 +542,27 @@ class Spring(Station):
         print(f'''Mean discharge = {Q0:.0f} l/s \nMean annual Discharge = {Q_annual/1000:.2} m³ \nMean storage Volume = {V0:.4} m³ \nt(1/2) = {t05:.0f} days \nMean residence time = {tau*365.25:.0f} days''')
         return t05, V0, tau
     
+    def plot_chemisty(self, kind: str = 'piper'):
+        gzuv_path = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\03-GZÜV\Qualitaetsdatenabfrage_20240704_0905.csv"
+        id = int(self.stammdaten['HZB-Nummer'])
+        
+        chem_df = utils.GZUV(gzuv_path).df
+        chem_df = chem_df[chem_df['HZBnr'] == id]
+        station_df = utils.GZUV_format_for_plot(chem_df, id).reset_index()
+
+        from wqchartpy import gibbs, triangle_piper, schoeller, chadha, stiff
+
+        if kind == 'piper':
+            triangle_piper.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_piper', figformat='png')
+        elif kind == 'stiff':
+            stiff.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_stiff', figformat='png')
+        elif kind == 'gibbs':
+            gibbs.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_gibbs', figformat='png')
+        elif kind == 'schoeller':
+            schoeller.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_schoeller', figformat='png')
+        elif kind == 'chadha':
+            chadha.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_chadha', figformat='png')
+
     def plot_isotope_crossplot(self, HZBnr: int=None, save: bool=False, path: str='ISOCP.png') -> tuple:
         """
         Plots the isotope crossplot for a given HZB number.

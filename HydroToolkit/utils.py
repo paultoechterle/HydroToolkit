@@ -506,157 +506,137 @@ def GMWL(limit = (-25,5)) -> dict:
 
 # GZÜV Readout from excel sheets and data Handling
 class GZUV:
-    def __init__(self, path:str):
-        """Hanles GZÜV excel files. 
+    def __init__(self, path:str, top:int=38, bottom:int=25):
+        """
+        Handles GZÜV data from csv files provided by "Qualitätsdatenabfrage".
 
-        Args:
-            path (str): path to data file (output GZÜV Qualitätsdatenabfrage)
-
-        Example Use:
-        station_id = 'KK71130012'
-        file_path = r"path/to/Qualitätsdatenabfrage.xlsx"
-        df = GZUV(path=file_path).get_station_data(station_id=station_id)
+        Parameters:
+        - path (str): The path to the data file.
+        - top (int): The number of rows to skip from the top of the file (default: 38).
+        - bottom (int): The number of rows to read from the file (default: 25).
         """
         self.path = path
-        # read data sheet
-        self.df = pd.read_excel(self.path, sheet_name='Daten')
-        # Clean the data
-        self.cleaned_df = self._clean_data(self.df)
-        # Restructure the data
-        self.structured_data = self._restructure_data(self.cleaned_df)
+        column_mapping = {'GZÜV-ID': 'gzuev_id',
+                                'Gemeindename': 'gemeindename',
+                                'Quartal': 'quartal',
+                                'ENTNAHME-DATUM': 'entnahme_datum',
+                                'LUFTTEMPERATUR IN °C': 'lufttemperatur',
+                                'GERUCH': 'geruch',
+                                'FAERBUNG': 'faerbung',
+                                'TRUEBUNG': 'truebung',
+                                'WASSERTEMPERATUR °C': 'wassertemperatur',
+                                'PH-WERT': 'pH',
+                                'SAUERSTOFFGEHALT mg/l': 'O2_gehalt',
+                                'REDOXPOTENTIAL mV': 'redoxpotential',
+                                'GESAMTHAERTE °dH': 'gesamt_haerte',
+                                'KARBONATHAERTE °dH': 'karbonat_haerte',
+                                'FREIE KOHLENSAEURE mg/l': 'CO3',
+                                'CALCIUM mg/l': 'Ca',
+                                'MAGNESIUM mg/l': 'Mg',
+                                'NATRIUM mg/l': 'Na',
+                                'KALIUM mg/l': 'K',
+                                'EISEN mg/l': 'Fe',
+                                'MANGAN mg/l': 'Mn',
+                                'BOR mg/l': 'B',
+                                'AMMONIUM mg/l': 'NH4',
+                                'NITRIT mg/l': 'NO2',
+                                'NITRAT mg/l': 'NO3',
+                                'CHLORID mg/l': 'Cl',
+                                'SULFAT mg/l': 'SO4',
+                                'HYDROGENK. mg/l': 'HCO3',
+                                'ORTHOPHOSPHAT mg/l': 'PO4',
+                                'KIESELSAEURE mg/l': 'SiO2',
+                                'FLUORID mg/l': 'F',
+                                'DOC mg/l': 'doc',
+                                'TOC mg/l': 'toc',
+                                'QUELLSCHÜTTUNG l/s': 'quellschuettung',
+                                'TRITIUM TE': 'H3',
+                                'DEUTERIUM d 0/00': 'D2',
+                                'SAUERSTOFF 18 d 0/00': 'O18',
+                                'RADON-222 Bq/l': 'Rn222',
+                                'ELEKTR. LEITF. (bei 20°C) µS/cm': 'elektr_leitf',
+                                'CADMIUM µg/l': 'Cd',
+                                'QUECKSILBER µg/l': 'Hg',
+                                'ZINK µg/l': 'Zn',
+                                'KUPFER µg/l': 'Cu',
+                                'ALUMINIUM µg/l': 'Al',
+                                'BLEI µg/l': 'Pb',
+                                'CHROM-GESAMT (filtriert) µg/l': 'Cr_gesamt',
+                                'NICKEL µg/l': 'Ni',
+                                'ARSEN µg/l': 'As',
+                                'URAN µg/l': 'U'}
 
-        self.parameter_mapping = {'G102': 'date','G107': 'T_air','G111': 'GERUCH',
-                             'G113': 'FAERBUNG','G114': 'TRUEBUNG','G116': 'T_water',
-                             'G117': 'LF','G118': 'pH','G119': 'SAUERSTOFFGEHALT',
-                             'G122': 'GESAMTHAERTE','G123': 'KARBONATHAERTE',
-                             'G134': 'Ca','G135': 'Mg','G136': 'Na','G137': 'K',
-                             'G138': 'Fe','G139': 'Mn','G140': 'Cd','G141': 'Hg',
-                             'G142': 'Zn','G145': 'Cu','G146': 'Al','G147': 'Pb',
-                             'G148': 'Cr','G149': 'Ni','G150': 'As','G151': 'B',
-                             'G152': 'NH3','G153': 'NO2','G154': 'NO3','G155': 'Cl',
-                             'G156': 'SO4','G157': 'HCO3','G159': 'PO4','G161': 'F',
-                             'G164': 'DOC','G223': 'Q','G226': 'TRITIUM',
-                             'G228': 'O180','G275': 'Sb','G285': 'Rn'}
+        # read data sheet
+        self.df_raw = pd.read_csv(path, sep=';', encoding='latin1', skiprows=top)[:-bottom]
+        self.df_raw.rename(columns=column_mapping, inplace=True)
+        self.df_raw['date'] = pd.to_datetime(self.df_raw['entnahme_datum'], dayfirst=True)
+        
+        # Clean the data
+        self.cleaned_df = self._clean_data(self.df_raw)
+
+        # join with station ids
+        self.stations = pd.read_excel(r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\Stationen_ids.xlsx")
+        self.df = pd.merge(self.stations, self.cleaned_df,
+                           left_on='gzuev_id', right_on='gzuev_id')
 
     def _clean_data(self, df: pd.DataFrame):
+        import re
         # Columns to exclude from cleaning
-        exclude_columns = ['GZÜV-ID', 'Gemeindename', 'Parameter ID', 'Parameter Name']
+        exclude_columns = ['gzuev_id','quartal','gemeindename','entnahme_datum',
+                        'date','geruch','faerbung','truebung',]
         
         # Replace no data values, below detection limit and [] in relevant columns only
         for col in df.columns:
             if col not in exclude_columns:
-                df[col].replace(to_replace=r'<\d+', value=0, regex=True, inplace=True)
+                # Fix double decimal issues (e.g., '0.0.2' -> '0.2')
+                df[col] = df[col].apply(lambda x: re.sub(r'(\d+)\.(\d+)\.(\d+)', r'\1.\3', x) if isinstance(x, str) and re.match(r'\d+\.\d+\.\d+', x) else x)
+                
+                # Replace values below detection limit with half the numeric value
+                df[col] = df[col].apply(lambda x: re.sub(r'<(\d+)', lambda m: str(float(m.group(1)) * 0.5), x) if isinstance(x, str) and re.match(r'<\d+', x) else x)
+                
+                # Replace bracketed numeric values with NaN
+                df[col].replace(to_replace=r'\[\d+,\d+\]', value=np.nan, regex=True, inplace=True)
+                
+                # Remove other brackets
                 df[col].replace(to_replace=r'\[|\]', value='', regex=True, inplace=True)
-                df[col].replace(to_replace=r'n.a.', value=np.nan, regex=True, inplace=True)
-
+                
+                # Replace 'n.a.' with NaN
+                df[col].replace(to_replace='n.a.', value=np.nan, regex=False, inplace=True)
+                
                 # Convert commas to dots for numeric values
                 df[col] = df[col].apply(lambda x: str(x).replace(',', '.') if isinstance(x, str) else x)
-                df[col] = pd.to_numeric(df[col], errors='ignore')
-
-        return df
-
-    def _restructure_data(self, df: pd.DataFrame):
-        # Create a nested dictionary structure
-        data_dict = {}
-        for station_id, group in df.groupby('GZÜV-ID'):
-            station_id_str = str(station_id)
-            gemeindename = group['Gemeindename'].iloc[0]
-            data_dict[station_id_str] = {
-                'Gemeindename': gemeindename,
-                'Parameters': {}
-            }
-            for param, param_group in group.groupby(['Parameter ID', 'Parameter Name']):
-                param_id, param_name = param
-                param_data = param_group.iloc[:, 3:]  # Adjust column slicing if needed
-                if param_id == 'G102':  # This is the timestamp parameter
-                    param_data = param_data.apply(pd.to_datetime, errors='coerce')
-                data_dict[station_id_str]['Parameters'][param_id] = {
-                    'ParameterName': param_name,
-                    'Data': param_data.T.to_dict()
-                }
-        
-        return data_dict
-
-    def _get_parameter_df(self, structured_data: dict, station_id: str, parameter_ids: list):
-        station_data = structured_data[station_id]
-        parameters = station_data['Parameters']
-
-        # Ensure G102 is in the parameter list
-        if 'G102' not in parameter_ids:
-            parameter_ids.append('G102')
-
-        # Create a DataFrame to hold the parameter data
-        data = {}
-
-        # Loop through each parameter ID and add the data to the dictionary
-        for param_id in parameter_ids:
-            param_data = list(parameters[param_id]['Data'].values())[0].values()
-            data[param_id] = param_data
-
-        df = pd.DataFrame(data)
-
-        # Add Gemeindename to the DataFrame
-        df['Gemeindename'] = station_data['Gemeindename']
-
-        # Drop rows with NaT in G102
-        df.dropna(subset=['G102'], inplace=True)
-
-        # Define non-numeric columns
-        non_numeric_columns = {'G102', 'G107', 'G111', 'G113', 'G114', 'Gemeindename'}
-
-        # Convert columns to float except for non-numeric columns
-        for col in df.columns:
-            if col not in non_numeric_columns:
+                
+                # Convert columns to numeric, coercing errors
                 df[col] = pd.to_numeric(df[col], errors='coerce')
-
-        # Convert G102 to datetime
-        df['G102'] = pd.to_datetime(df['G102'], errors='coerce')
-
-        # Set G102 as the index
-        df.set_index('G102', inplace=True)
-
-        # Rename columns using the parameter mapping
-        df.rename(columns=self.parameter_mapping, inplace=True)
-        return df
-
-    def get_station_data(self, station_id:str, parameter_ids:list = None):
-        if parameter_ids == None:
-            parameter_ids = ['G118','G134','G135','G136','G137','G155','G156','G157','G164']
-        # generate Dataframe
-        self.station_df = self._get_parameter_df(self.structured_data, station_id, parameter_ids)
         
-        return self.station_df
-    
-def GZUV_format_for_plot(df:pd.DataFrame, label:str='label', color:str='k', 
-                    marker:str='o', size:int=30, alpha:float=1) -> pd.DataFrame:
-    """Takes a station dataframe from GZÜV data and adds some columns so it
-    can be used as input for wqchartpy diagrams, which is a package for
-    plotting of hydrochemistry data.
+        return df
+   
+def GZUV_format_for_plot(df:pd.DataFrame, label:str='label', color:str='k', marker:str='o', size:int=30, alpha:float=1) -> pd.DataFrame:
+    """Take a cleaned GZÜV dataframe and add necessary columns 
+    so it can be used as input for wqchartpy diagrams.
 
     Args:
-        df (pd.DataFrame): input dataframe with hydrochemistry data. Derived 
-        from GZUV.get_station_data(station_id, parameter_ids) method.
-        station_id (str): _description_
+        df (pd.DataFrame): dataframe with GZÜV data
+        label (str, optional): _description_. Defaults to 'label'.
+        color (str, optional): _description_. Defaults to 'k'.
+        marker (str, optional): _description_. Defaults to 'o'.
+        size (int, optional): _description_. Defaults to 30.
+        alpha (float, optional): _description_. Defaults to 1.
 
     Returns:
         pd.DataFrame: Dataframe with correct format for wqchartpy.
-
-    Example Use:
-    station_id = 'KK71130012'
-    file_path = r"path/to/Qualitätsdatenabfrage.xlsx"
-    df = GZUV(path=file_path).get_station_data(station_id=station_id)
-    df = format_for_plot(df, station_id)
     """
-    df = df.reset_index()
-    df['Sample'] = df['G102']
-    df['Label'] = [label for i in range(df.index.size)]
-    df['Color'] = [color for i in range(df.index.size)]
-    df['Marker'] = [marker for i in range(df.index.size)]
-    df['Size'] = [size for i in range(df.index.size)]
-    df['Alpha'] = [alpha for i in range(df.index.size)]
-    df['CO3'] = [0 for i in range(df.index.size)]
-    df['TDS'] = df.Ca + df.Mg + df.Na + df.K + df.Cl + df.SO4 + df.HCO3
-    return df
+    cols = ['Ca', 'Mg', 'Na', 'K', 'HCO3', 'SO4', 'Cl', 'CO3', 'pH', 'date', 'Name']
+    station_df = df[cols].copy()
+    station_df.loc[:, 'TDS'] = station_df.loc[:, cols[:8]].sum(axis=1)
+    station_df['Sample'] = station_df['Name']
+    station_df['Label'] = [label for i in range(station_df.index.size)]
+    station_df['Color'] = [color for i in range(station_df.index.size)]
+    station_df['Marker'] = marker
+    station_df['Size'] = [size for i in range(station_df.index.size)]
+    station_df['Alpha'] = [alpha for i in range(station_df.index.size)]
+    station_df.replace(np.nan, 0, inplace=True)
+    return station_df
 
 # CTUA Readout from excel sheets and data Handling
 def process_CTUA_data(file_path:str)->pd.DataFrame:
