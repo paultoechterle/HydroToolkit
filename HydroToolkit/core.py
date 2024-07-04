@@ -318,7 +318,8 @@ class Station:
             mod = utils.boussinesq_model
             initial_guess = [self.df.loc[t0:tn, 'Q'].max(), 0.1]
 
-        y_data = self.df.Q[t0:tn].interpolate().dropna()#.resample('D').mean()
+        # y_data = self.df.Q[t0:tn].interpolate().dropna()#.resample('D').mean()
+        y_data = self.df_resampled.Q[t0:tn].interpolate().dropna()#.resample('D').mean()
         time_data = (y_data.index - y_data.index[0]).total_seconds() / (24 * 3600)  # Convert to days
 
         params, covariance = curve_fit(mod, time_data, y_data, p0=initial_guess)
