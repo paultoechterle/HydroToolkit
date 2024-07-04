@@ -556,7 +556,7 @@ class Spring(Station):
             Raises:
             - None
 
-            Valid plot types: 'piper', 'stiff', 'gibbs', 'schoeller', 'chadha'
+            Valid plot types: 'piper', 'gibbs', 'schoeller', 'chadha'
             """
 
             # Load the chemistry data
@@ -583,8 +583,8 @@ class Spring(Station):
             # generate plots
             if kind == 'piper':
                 triangle_piper.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_piper', figformat='png')
-            elif kind == 'stiff':
-                stiff.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_stiff', figformat='png')
+            # elif kind == 'stiff':
+            #     stiff.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_stiff', figformat='png')
             elif kind == 'gibbs':
                 gibbs.plot(station_df, unit='mg/L', figname='plots/' + self.stammdaten['Messstelle'] + '_gibbs', figformat='png')
             elif kind == 'schoeller':
