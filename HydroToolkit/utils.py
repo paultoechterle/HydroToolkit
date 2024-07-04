@@ -628,13 +628,13 @@ def GZUV_format_for_plot(df:pd.DataFrame, label:str='label', color:str='k', mark
     """
     cols = ['Ca', 'Mg', 'Na', 'K', 'HCO3', 'SO4', 'Cl', 'CO3', 'pH', 'date', 'Name']
     station_df = df[cols].copy()
-    station_df.loc[:, 'TDS'] = station_df.loc[:, cols[:8]].sum(axis=1)
+    station_df['TDS'] = station_df[cols[:8]].sum(axis=1)
     station_df['Sample'] = station_df['Name']
-    station_df['Label'] = [label for i in range(station_df.index.size)]
-    station_df['Color'] = [color for i in range(station_df.index.size)]
+    station_df['Label'] = label
+    station_df['Color'] = color
     station_df['Marker'] = marker
-    station_df['Size'] = [size for i in range(station_df.index.size)]
-    station_df['Alpha'] = [alpha for i in range(station_df.index.size)]
+    station_df['Size'] = size
+    station_df['Alpha'] = alpha
     station_df.replace(np.nan, 0, inplace=True)
     return station_df
 
