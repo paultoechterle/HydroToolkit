@@ -10,6 +10,28 @@ import pymannkendall as mk
 cm = 1/2.54 # inch/cm conversion factor
 page = (21.0 - 1.65 - 1.25)*cm # A4 page
 
+# isotope data for springs
+# read data file
+file = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\24-06-11 Isotopendaten Quellen Tirol_DatenBML.xlsx"
+cols = {'Messstellenname':'name', 
+        'HZB-Nr.':'hzbnr', 
+        'Grundwasserkörper':'grundwasserkorper',
+        'Gemeinde':'gemeinde',
+        'Entnahmedatum':'datum', 
+        'Tritium [TE]':'tritium',
+        'Deuterium [‰ V-SMOW]':'d2h',
+        'Sauerstoff-18 [‰ V-SMOW]':'d18o',
+        'Qualität':'qualitaet', 
+        'Datenquelle':'datenquelle',
+        'Quelle lt. Tab. Wasserisotopenkarte':'quelle'
+}
+iso_df = pd.read_excel(file)
+iso_df.rename(columns=cols, inplace=True)
+# get mean values for each spring
+iso_df_mean = iso_df.groupby('hzbnr')[['d18o', 'd2h']].agg(['mean', 'std'])
+
+# utility functions
+
 def read_data(path: str, variable: str = 'x') -> pd.DataFrame:
     """
     Takes the path to a csv file that is provided via eHYD (https://ehyd.gv.at/) and returns
