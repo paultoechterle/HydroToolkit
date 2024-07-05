@@ -99,8 +99,12 @@ def read_metadata(path: str) -> dict:
                 key, value = line.split(":", 1)
                 metadata[key.strip()] = value.strip().lstrip(';')
 
-    metadata['coordinates'] = extract_coordinates(path)
-
+    metadata['coordinates'] = [None, None]
+    try:
+        metadata['coordinates'] = extract_coordinates(path)
+    except ValueError:
+        print("no coordinates found in metadata file! this may lead to errors in further processing.")
+        pass
     return metadata
 
 def read_TIWAG(paths):

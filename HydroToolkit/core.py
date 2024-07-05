@@ -53,9 +53,12 @@ class DataLoader:
         elif self.paths is not None:
             data = {}
             for variable, path in self.paths.items():
-                df = utils.read_data(path, variable=variable)
-                df.set_index('time', inplace=True)
-                data[variable] = df
+                if path == None:
+                    continue
+                else:
+                    df = utils.read_data(path, variable=variable)
+                    df.set_index('time', inplace=True)
+                    data[variable] = df
             return data
         else:
             raise ValueError("Either 'paths' or 'data_frame' must be provided")
