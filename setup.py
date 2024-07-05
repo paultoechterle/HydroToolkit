@@ -17,7 +17,7 @@ setup(
     ],
     include_package_data=True,
     package_data={
-        'HydroToolkit': ['data/*.csv', 'data/*.xlsx'],
+        'HydroToolkit': ['data/*.csv', 'data/*.xlsx', 'style/*.mplstyle'],
     },
     author='Paul Töchterle',
     author_email='paul.m.teochterle@gmail.com',
