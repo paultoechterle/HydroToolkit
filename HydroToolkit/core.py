@@ -667,7 +667,7 @@ class Spring(Station):
         print(f'''Mean discharge = {Q0:.0f} l/s \nMean annual Discharge = {Q_annual/1000:.2} m³ \nMean storage Volume = {V0:.4} m³ \nt(1/2) = {t05:.0f} days \nMean residence time = {tau*365.25:.0f} days''')
         return t05, V0, tau
     
-    def plot_chemisty(self, kind: str = 'piper', path = 'plots/'):
+    def plot_chemisty(self, kind: str = 'piper', path: str = ''):
             """
             Plot the chemistry data for a specific station using different 
             plot types.

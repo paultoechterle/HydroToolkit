@@ -32,8 +32,11 @@ iso_df.rename(columns=cols, inplace=True)
 # get mean values for each spring
 iso_df_mean = iso_df.groupby('hzbnr')[['d18o', 'd2h']].agg(['mean', 'std'])
 
-# utility functions
+# get spring station ids:
+file = pkg_resources.resource_filename('HydroToolkit', r'data/Stationen_ids.xlsx')
+stations = pd.read_excel(file)
 
+# utility functions
 def read_data(path: str, variable: str = 'x') -> pd.DataFrame:
     """
     Takes the path to a csv file that is provided via eHYD (https://ehyd.gv.at/) and returns
@@ -599,8 +602,8 @@ class GZUV:
         self.cleaned_df = self._clean_data(self.df_raw)
 
         # join with station ids
-        self.stations = pd.read_excel(r"HydroToolkit\data\Stationen_ids.xlsx")
-        self.df = pd.merge(self.stations, self.cleaned_df,
+        # self.stations = pd.read_excel(r"HydroToolkit\data\Stationen_ids.xlsx")
+        self.df = pd.merge(stations, self.cleaned_df,
                            left_on='gzuev_id', right_on='gzuev_id')
 
     def _clean_data(self, df: pd.DataFrame):
