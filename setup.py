@@ -12,15 +12,9 @@ setup(
         'seaborn',
         'requests',
         'pymannkendall',
-        'os',
-        'typing',
-        'random',
-        're',
-        'functools',
         'wqchartpy',
-        'sklearn'
+        'scikit-learn'
     ],
-
     author='Paul Töchterle',
     author_email='paul.m.teochterle@gmail.com',
     description='A package for hydrogeological timeseries data analysis and plotting',
