@@ -8,10 +8,6 @@ Tests/
 __pycache__/
 *.py[cod]
 
-# Ignore data and plot directories
-hydrotoolkit/data/
-hydrotoolkit/plots/
-
 # Ignore temporary files
 .DS_Store
 *.swp

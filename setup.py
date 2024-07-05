@@ -15,6 +15,10 @@ setup(
         'wqchartpy',
         'scikit-learn'
     ],
+    include_package_data=True,
+    package_data={
+        'HydroToolkit': ['data/*.csv', 'data/*.xlsx'],
+    },
     author='Paul Töchterle',
     author_email='paul.m.teochterle@gmail.com',
     description='A package for hydrogeological timeseries data analysis and plotting',

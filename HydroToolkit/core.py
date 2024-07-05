@@ -1,3 +1,4 @@
+import pkg_resources
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -523,7 +524,8 @@ class Spring(Station):
         
         # get the lapse rate from precipitation stations:
         # load precipitation isotope data
-        pfad = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\06-Isotopendaten\Qualitaetsdatenabfrage_20240703_1337.csv"
+        # pfad = r"data\Qualitaetsdatenabfrage_20240703_1337.csv"
+        pfad = pkg_resources.resource_filename('HydroToolkit', 'data/Qualitaetsdatenabfrage_20240703_1337.csv')
         cols = {
             'GZÜV-ID': 'gzuv_id',
             'Name': 'name',
@@ -683,7 +685,8 @@ class Spring(Station):
             """
 
             # Load the chemistry data
-            gzuv_path = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\03-GZÜV\Qualitaetsdatenabfrage_20240704_0905.csv"
+            # gzuv_path = r"HydroToolkit\data\Qualitaetsdatenabfrage_20240704_0905.csv"
+            gzuv_path = pkg_resources.resource_filename('HydroToolkit', 'data/Qualitaetsdatenabfrage_20240704_0905.csv')
             
             # slice the data for the specific station with input checks
             try:
@@ -721,21 +724,22 @@ class Spring(Station):
         Plots the isotope crossplot for a given HZB number.
 
         Parameters:
-        - HZBnr (int): The HZB number of the station. If None, the HZB number from the 'stammdaten' attribute will be used.
+        - HZBnr (int): The HZB number of the station. If None, the HZB number from the stammdaten attribute will be used.
 
         Returns:
         - tuple: A tuple containing the figure and axis objects of the plot.
 
         Note:
-        - The function requires the 'stammdaten' attribute to be set before calling this function.
-        - The function reads data from the file '24-06-11 Isotopendaten Quellen Tirol_DatenBML.xlsx' located at 'M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\'.
+        - The function requires the stammdaten attribute to be set before calling this function.
+        - The function reads data from the file in data/isotopes_data.xlsx .
         - The function plots the isotope data for all stations, the Global Meteoric Water Line (GMWL), and the specific station based on the HZB number.
         """
         
         if HZBnr is None:
             HZBnr = int(self.stammdaten['HZB-Nummer'])
 
-        file = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\24-06-11 Isotopendaten Quellen Tirol_DatenBML.xlsx"
+        # file = r"HydroToolkit\data\isotope_data.xlsx"
+        file = pkg_resources.resource_filename('HydroToolkit', 'data/isotope_data.xlsx')
         df = pd.read_excel(file)
         station_df = df[df['HZB-Nr.'] == HZBnr].dropna(subset=['Sauerstoff-18 [‰ V-SMOW]', 'Deuterium [‰ V-SMOW]'])
         gmwl = utils.GMWL((df['Sauerstoff-18 [‰ V-SMOW]'].min(),

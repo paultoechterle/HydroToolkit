@@ -1,9 +1,10 @@
 import os
+import pkg_resources
+import requests
+from typing import Union
 import pandas as pd
 import numpy as np
 from scipy.stats import gaussian_kde
-from typing import Union
-import requests
 import matplotlib.pyplot as plt
 import pymannkendall as mk
 
@@ -12,7 +13,8 @@ page = (21.0 - 1.65 - 1.25)*cm # A4 page
 
 # isotope data for springs
 # read data file
-file = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\24-06-11 Isotopendaten Quellen Tirol_DatenBML.xlsx"
+# file = r"HydroToolkit\data\isotope_data.xlsx"
+file = pkg_resources.resource_filename('HydroToolkit', r'data/isotope_data.xlsx')
 cols = {'Messstellenname':'name', 
         'HZB-Nr.':'hzbnr', 
         'Grundwasserkörper':'grundwasserkorper',
@@ -597,7 +599,7 @@ class GZUV:
         self.cleaned_df = self._clean_data(self.df_raw)
 
         # join with station ids
-        self.stations = pd.read_excel(r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\Stationen_ids.xlsx")
+        self.stations = pd.read_excel(r"HydroToolkit\data\Stationen_ids.xlsx")
         self.df = pd.merge(self.stations, self.cleaned_df,
                            left_on='gzuev_id', right_on='gzuev_id')
 
