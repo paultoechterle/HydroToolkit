@@ -418,84 +418,87 @@ class Station:
             savepath = path if path else f'plots/{self.metadata["Messstelle"]}_TWFLplot.png'
             plt.savefig(savepath, dpi=300)
 
-        return fig, ax
+        return fig, axes
 
     @utils.suppress_print
+    @utils.save_plot
     def plot_timeseries(self, variables: list=None, trend: bool=False, 
                         filter: bool=False, daily:bool=True,
-                        save:bool=False, path:str='ts.png'):
+                        path: str='ts.png'):
         if variables is None:
             variables = self.variables
-        fig, axes = self.plotter.plot_timeseries(variables, filter=filter, trend=trend, 
-                                                  save=save, path=path, daily=daily)
+        fig, axes = self.plotter.plot_timeseries(variables, filter=filter, trend=trend,
+                                                 daily=daily)
         return fig, axes
 
-    def plot_histogram(self, variables: list=None, daily: bool=True, save:bool=False, path:str='hist.png'):
+    @utils.save_plot
+    def plot_histogram(self, variables: list=None, daily: bool=True, path:str='hist.png'):
         if variables is None:
             variables = self.variables
-        fig, axes = self.plotter.plot_histogram(variables, daily=daily, 
-                                                save=save, path=path)
+        fig, axes = self.plotter.plot_histogram(variables, daily=daily)
         return fig, axes
 
     @utils.suppress_print
+    @utils.save_plot
     def plot_ts_hist(self, variables: list=None, trend:bool=False, daily: bool=True, 
-                     save:bool=False, path:str='ts_hist.png'):
+                     path:str='ts_hist.png'):
         if variables is None:
             variables = self.variables
-        fig, axes = self.plotter.plot_ts_hist(variables, trend=trend, save=save, 
-                                              daily=daily, path=path)
+        fig, axes = self.plotter.plot_ts_hist(variables, trend=trend, daily=daily)
         return fig, axes
 
-    def plot_confidence_intervals(self, variable: str='Q', save:bool=False, 
-                                  path:str='ci.png'):
+    @utils.save_plot
+    def plot_confidence_intervals(self, variable: str='Q', path:str='ci.png'):
         stats = self.create_stats(variable, freq='D')
-        fig, axes = self.plotter.plot_confidence_intervals(variable, stats=stats,
-                                                           save=save, path=path)
+        fig, axes = self.plotter.plot_confidence_intervals(variable, stats=stats)
         return fig, axes
     
-    def plot_ci_panel(self, variables: list=None, save:bool=False, path:str='ci_panel.png'):
+    @utils.save_plot
+    def plot_ci_panel(self, variables: list=None, path:str='ci_panel.png'):
         if variables is None:
             variables = self.variables
         stats_list = [self.create_stats(variable, freq='D') for variable in variables]
-        fig, axes = self.plotter.plot_ci_panel(stats_list, variables, save=save, path=path)
+        fig, axes = self.plotter.plot_ci_panel(stats_list, variables)
         return fig, axes
-    
-    def plot_autocorrelation(self, save:bool=False, path:str='acf.png'):
+
+    @utils.save_plot    
+    def plot_autocorrelation(self, path:str='acf.png'):
         autocorrelations = self.processor.calculate_autocorrelations()
-        fig, ax = self.plotter.plot_autocorrelations(autocorrelations[self.variables],
-                                                     save=save, path=path)
+        fig, ax = self.plotter.plot_autocorrelations(autocorrelations[self.variables])
         return fig, ax
     
-    def plot_cumulative_distribution(self, variables: list=None, save:bool=False, path:str='cumdist.png'):
+    @utils.save_plot
+    def plot_cumulative_distribution(self, variables: list=None, path:str='cumdist.png'):
         if variables is None:
             variables = self.variables
-        fig, axes = self.plotter.plot_cumulative_distribution(variables,
-                                                              save=save,
-                                                              path=path)
+        fig, axes = self.plotter.plot_cumulative_distribution(variables)
         return fig, axes
     
-    def plot_parde_coefficients(self, variable='Q', save:bool=False, path:str='parde.png'):
-        fig, ax = self.plotter.plot_parde_coefficients(variable, save=save,
-                                                       path=path)
+    @utils.save_plot
+    def plot_parde_coefficients(self, variable='Q', path:str='parde.png'):
+        fig, ax = self.plotter.plot_parde_coefficients(variable)
         return fig, ax
     
-    def plot_heatmap(self, variable='TEMP', save:bool=False, path:str='heatmap.png'):
-        fig, ax = self.plotter.plot_heatmap(variable, save=save, path=path)
+    @utils.save_plot
+    def plot_heatmap(self, variable='TEMP', path:str='heatmap.png'):
+        fig, ax = self.plotter.plot_heatmap(variable)
         return fig, ax
 
-    def plot_autocorr_timeseries(self, variable='Q', save:bool=False, path:str='acf_ts.png'):
-        fig, ax = self.plotter.plot_autocorr_timeseries(variable, save=save, path=path)
+    @utils.save_plot
+    def plot_autocorr_timeseries(self, variable='Q', path:str='acf_ts.png'):
+        fig, ax = self.plotter.plot_autocorr_timeseries(variable)
         return fig, ax
 
+    @utils.save_plot
     def plot_cross_correlation(self, variable_pairs=[('Q', 'LF'), ('Q', 'TEMP')], 
-                               save:bool=False, path:str='crosscorr.png'):
-        fig, ax = self.plotter.plot_cross_correlation(variable_pairs, save=save, path=path)
+                               path:str='crosscorr.png'):
+        fig, ax = self.plotter.plot_cross_correlation(variable_pairs)
         return fig, ax
     
+    @utils.save_plot
     def plot_scatter(self, variable_pairs=[('Q', 'LF'), ('Q', 'TEMP')], 
-                     regression:bool=True, save:bool=False, path:str='scatter.png'):
-        fig, axes = self.plotter.plot_scatter(variable_pairs, regression=regression, 
-                                              save=save, path=path)
+                     regression:bool=True, path:str='scatter.png'):
+        fig, axes = self.plotter.plot_scatter(variable_pairs, regression=regression)
         return fig, axes
 
 class Spring(Station):
@@ -733,7 +736,8 @@ class Spring(Station):
                 chadha.plot(station_df, unit='mg/L', figname= path + self.stammdaten['Messstelle'] + '_chadha', figformat='png')
             return None
     
-    def plot_isotope_crossplot(self, HZBnr: int=None, save: bool=False, path: str='ISOCP.png') -> tuple:
+    def plot_isotope_crossplot(self, HZBnr: int=None, save: bool=False, 
+                               path: str='ISOCP.png') -> tuple:
         """
         Plots the isotope crossplot for a given HZB number.
 
@@ -775,8 +779,7 @@ class Spring(Station):
             ax.legend()
             plt.tight_layout()
             if save:
-                savepath = path if path else f'plots/{self.stammdaten["Messstelle"]}_ISOCP.png'
-                plt.savefig(savepath, dpi=300)
+                plt.savefig(path, dpi=300)
             return fig, ax
         return None
     

@@ -39,7 +39,6 @@ class Plotter:
         self.metadata = metadata
         self.translate_unit = translate_unit
 
-    @utils.save_plot
     def plot_timeseries(self, variables: list, filter: bool = False,
                         trend: bool = False, daily: bool = True):
         """
@@ -85,7 +84,6 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
 
-    @utils.save_plot
     def plot_histogram(self, variables: list, daily: bool = True):
         """
         Plot histograms for the specified variables.
@@ -118,7 +116,6 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
     
-    @utils.save_plot
     def plot_ts_hist(self, variables: list, trend: bool = False, daily: bool = True):
         """plot combined timeseries and histogram for the specified variables
         in a panel plot.
@@ -225,7 +222,6 @@ class Plotter:
         # plt.tight_layout()
         # return fig, axes
     
-    @utils.save_plot
     def plot_confidence_intervals(self, variable: str, stats: pd.DataFrame):
         """Plot the annual distribution of a variable as a function of day of 
         the year.
@@ -256,7 +252,6 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
     
-    @utils.save_plot
     def plot_ci_panel(self, stats_list: list, variables: list):
         """
         Plot confidence intervals for multiple variables in separate subplots.
@@ -300,7 +295,6 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
     
-    @utils.save_plot
     def plot_autocorrelations(self, autocorrelations: pd.DataFrame):
         fig, ax = plt.subplots(figsize=(page*0.4, 5*cm))
         for column in autocorrelations.columns:
@@ -314,7 +308,6 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
     
-    @utils.save_plot
     def plot_cumulative_distribution(self, variables: list):
         """
         Plot cumulative distribution functions for the specified variables.
@@ -348,7 +341,6 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
     
-    @utils.save_plot
     def plot_parde_coefficients(self, variable: str='Q'):
         """
         Plot Pardé coefficients for the specified variable.
@@ -407,7 +399,6 @@ class Plotter:
 
         return fig, ax
     
-    @utils.save_plot
     def plot_heatmap(self, variable: str='TEMP'):
         """
         Plot heatmap for the specified variable.
@@ -451,7 +442,6 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
     
-    @utils.save_plot
     def plot_autocorr_timeseries(self, variable: str='Q'):
         """
         Plots the timeseries of autocorrelation stats for a given variable.
@@ -510,7 +500,6 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
     
-    @utils.save_plot
     def plot_cross_correlation(self, variables: list):
         """
         Plot cross correlation for specified variables.
@@ -548,7 +537,6 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
 
-    @utils.save_plot
     def plot_scatter(self, variable_pairs: list, regression: bool = True,
                      print_stats: bool = True):
         """
