@@ -779,7 +779,8 @@ class Spring(Station):
             ax.legend()
             plt.tight_layout()
             if save:
-                plt.savefig(path, dpi=300)
+                savepath = path if path else f'plots/{self.stammdaten["Messstelle"]}_ISOCP.png'
+                plt.savefig(savepath, dpi=300)
             return fig, ax
         return None
     
