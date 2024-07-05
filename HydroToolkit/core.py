@@ -27,6 +27,7 @@ class DataLoader:
         self.paths = paths
         self.data_frame = data_frame
 
+    @utils.suppress_print
     def load_metadata(self, path: str):
         """
         Load metadata from a given path.
@@ -160,6 +161,7 @@ class Analysis:
         return utils.mann_kendall_test(self.df_resampled[variable], period=365)
     
 class Station:
+    @utils.suppress_print
     def __init__(self, data_paths: dict = None, metadata_path: str = None, 
                  data_frame: pd.DataFrame = None, metadata: dict = None,
                  resolution: str = 'D'):
@@ -277,6 +279,7 @@ class Station:
         data = utils.read_spartacus(params)
         return data
 
+    @utils.suppress_print
     def calc_catchment_area(self):
         """calculate the minimum catchment area from mean dicharge and 
         precipitation estimates. Mean precipitation values are calulated from
@@ -298,6 +301,7 @@ class Station:
         print(f'Catchment area @ {mean_discharge:.0f} l/s and {mean_precip:.0f} mm/m² = {catchment_area:.2f} km² ')
         return catchment_area
     
+    @utils.suppress_print
     def recession_curve(self, t0: pd.Timestamp, tn: pd.Timestamp, 
                          model: str='Maillet', plot: bool = False):
         """
@@ -370,6 +374,7 @@ class Station:
         # else:
         #     return t, fit, slice, alpha
 
+    @utils.suppress_print
     def plot_recession_curves(self, timeslices: list, model:str='Maillet', 
                                save: bool = False, path: str = 'TWFL.png'):
         """
@@ -415,6 +420,7 @@ class Station:
 
         return fig, ax
 
+    @utils.suppress_print
     def plot_timeseries(self, variables: list=None, trend: bool=False, 
                         filter: bool=False, daily:bool=True,
                         save:bool=False, path:str='ts.png'):
@@ -431,6 +437,7 @@ class Station:
                                                 save=save, path=path)
         return fig, axes
 
+    @utils.suppress_print
     def plot_ts_hist(self, variables: list=None, trend:bool=False, daily: bool=True, 
                      save:bool=False, path:str='ts_hist.png'):
         if variables is None:
@@ -492,6 +499,7 @@ class Station:
         return fig, axes
 
 class Spring(Station):
+    @utils.suppress_print
     def __init__(self, data_paths: dict = None, metadata_path: str = None, 
                  data_frame: pd.DataFrame = None, metadata: dict = None, resolution: str = 'D'):
         super().__init__(data_paths, metadata_path, data_frame, metadata, resolution)
@@ -504,7 +512,8 @@ class Spring(Station):
         except KeyError:
             print('No isotope data found for this station')
             self.isotopes = None
-
+    
+    @utils.suppress_print
     def mean_catchment_elevation(self, spring_elevation:float, plot:bool=False):
         """
         Calculate the mean catchment elevation based on precipitation isotope data.
@@ -645,6 +654,7 @@ class Spring(Station):
         tau = utils.calculate_tau(V0, Q_annual)
         return tau
     
+    @utils.suppress_print
     def print_aquifer_metrics(self, alpha:float, Q_annual: float=None, 
                               Q0: float=None):
         """Calculate the hydrogeological halflife (t05), mean storage volume (V0)
@@ -670,6 +680,7 @@ class Spring(Station):
         print(f'''Mean discharge = {Q0:.0f} l/s \nMean annual Discharge = {Q_annual/1000:.2} m³ \nMean storage Volume = {V0:.4} m³ \nt(1/2) = {t05:.0f} days \nMean residence time = {tau*365.25:.0f} days''')
         return t05, V0, tau
     
+    @utils.suppress_print
     def plot_chemisty(self, kind: str = 'piper', path: str = ''):
             """
             Plot the chemistry data for a specific station using different 

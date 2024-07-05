@@ -13,15 +13,15 @@ page = (21.0 - 1.65 - 1.25)*cm # A4 page
 colors = ['#0099ff', '#89b576', '#f27977', '#ff6699',
           '#99e6ff', '#006600', '#fae6ff']
 
-def save_plot(func):
-    @functools.wraps(func)
-    def wrapper(*args, save:bool = False, path:str = None, **kwargs):
-        fig, ax = func(*args, **kwargs)
-        if save:
-            fig.savefig(path, dpi=300)
-        plt.show()
-        return fig, ax
-    return wrapper
+# def save_plot(func):
+#     @functools.wraps(func)
+#     def wrapper(*args, save:bool = False, path:str = None, **kwargs):
+#         fig, ax = func(*args, **kwargs)
+#         if save:
+#             fig.savefig(path, dpi=300)
+#         plt.show()
+#         return fig, ax
+#     return wrapper
 
 class Plotter:
     def __init__(self, df: pd.DataFrame, df_resampled: pd.DataFrame, 
@@ -39,7 +39,7 @@ class Plotter:
         self.metadata = metadata
         self.translate_unit = translate_unit
 
-    @save_plot
+    @utils.save_plot
     def plot_timeseries(self, variables: list, filter: bool = False,
                         trend: bool = False, daily: bool = True):
         """
@@ -85,7 +85,7 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
 
-    @save_plot
+    @utils.save_plot
     def plot_histogram(self, variables: list, daily: bool = True):
         """
         Plot histograms for the specified variables.
@@ -118,7 +118,7 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
     
-    @save_plot
+    @utils.save_plot
     def plot_ts_hist(self, variables: list, trend: bool = False, daily: bool = True):
         """plot combined timeseries and histogram for the specified variables
         in a panel plot.
@@ -225,7 +225,7 @@ class Plotter:
         # plt.tight_layout()
         # return fig, axes
     
-    @save_plot
+    @utils.save_plot
     def plot_confidence_intervals(self, variable: str, stats: pd.DataFrame):
         """Plot the annual distribution of a variable as a function of day of 
         the year.
@@ -256,7 +256,7 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
     
-    @save_plot
+    @utils.save_plot
     def plot_ci_panel(self, stats_list: list, variables: list):
         """
         Plot confidence intervals for multiple variables in separate subplots.
@@ -300,7 +300,7 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
     
-    @save_plot
+    @utils.save_plot
     def plot_autocorrelations(self, autocorrelations: pd.DataFrame):
         fig, ax = plt.subplots(figsize=(page*0.4, 5*cm))
         for column in autocorrelations.columns:
@@ -314,7 +314,7 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
     
-    @save_plot
+    @utils.save_plot
     def plot_cumulative_distribution(self, variables: list):
         """
         Plot cumulative distribution functions for the specified variables.
@@ -348,7 +348,7 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
     
-    @save_plot
+    @utils.save_plot
     def plot_parde_coefficients(self, variable: str='Q'):
         """
         Plot Pardé coefficients for the specified variable.
@@ -407,7 +407,7 @@ class Plotter:
 
         return fig, ax
     
-    @save_plot
+    @utils.save_plot
     def plot_heatmap(self, variable: str='TEMP'):
         """
         Plot heatmap for the specified variable.
@@ -451,7 +451,7 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
     
-    @save_plot
+    @utils.save_plot
     def plot_autocorr_timeseries(self, variable: str='Q'):
         """
         Plots the timeseries of autocorrelation stats for a given variable.
@@ -510,7 +510,7 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
     
-    @save_plot
+    @utils.save_plot
     def plot_cross_correlation(self, variables: list):
         """
         Plot cross correlation for specified variables.
@@ -548,7 +548,7 @@ class Plotter:
         plt.tight_layout()
         return fig, ax
 
-    @save_plot
+    @utils.save_plot
     def plot_scatter(self, variable_pairs: list, regression: bool = True,
                      print_stats: bool = True):
         """

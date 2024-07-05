@@ -2,6 +2,9 @@ import os
 import pkg_resources
 import requests
 from typing import Union
+import functools
+import sys
+import io
 import pandas as pd
 import numpy as np
 from scipy.stats import gaussian_kde
@@ -35,6 +38,32 @@ iso_df_mean = iso_df.groupby('hzbnr')[['d18o', 'd2h']].agg(['mean', 'std'])
 # get spring station ids:
 file = pkg_resources.resource_filename('HydroToolkit', r'data/Stationen_ids.xlsx')
 stations = pd.read_excel(file)
+
+# decorator functions
+def save_plot(func):
+    @functools.wraps(func)
+    def wrapper(*args, save:bool = False, path:str = None, **kwargs):
+        fig, ax = func(*args, **kwargs)
+        if save:
+            fig.savefig(path, dpi=300)
+        plt.show()
+        return fig, ax
+    return wrapper
+
+def suppress_print(func):
+    @functools.wraps(func)
+    def wrapper(*args, supress_print: bool = False, **kwargs):
+        if supress_print:
+            original_stdout = sys.stdout  # Save the current stdout
+            sys.stdout = io.StringIO()  # Redirect stdout to a string IO
+            try:
+                result = func(*args, **kwargs)  # Call the original function
+            finally:
+                sys.stdout = original_stdout  # Restore stdout
+            return result
+        else:
+            return func(*args, **kwargs)  # Call the original function normally if supress_print is False
+    return wrapper
 
 # utility functions
 def read_data(path: str, variable: str = 'x') -> pd.DataFrame:
@@ -70,6 +99,7 @@ def read_data(path: str, variable: str = 'x') -> pd.DataFrame:
 
     return df[df.columns[:-1]]
 
+@suppress_print
 def read_metadata(path: str) -> dict:
     """
     Extracts the station metadata header from a csv file that is provided via eHYD (https://ehyd.gv.at/)
@@ -141,6 +171,7 @@ def list_files(directory: str, filetype: str = '.csv') -> list:
                 csv_files.append(os.path.join(root, file))
     return csv_files
 
+@suppress_print
 def filter_by_string(input_list:list, substring:str) -> list:
     """Select items from a list of files that contain a substring (e.g. HZB Nr).
 
@@ -401,6 +432,7 @@ def boussinesq_model(t: float, Q0: float, alpha: float) -> float:
     """
     return Q0 / (1+alpha*t)**2
 
+@suppress_print
 def read_spartacus(params:dict) -> pd.DataFrame:
     """request point timeseries data from spartacus server
 
@@ -717,6 +749,7 @@ def process_CTUA_data(file_path:str)->pd.DataFrame:
     df_cleaned = df_join.loc[:, ~df_join.columns.str.contains('^Unnamed')]
     return df_cleaned
 
+@suppress_print
 def combine_CTUA_data(path:str) -> pd.DataFrame:
     """scrapes a directory for files with "CTUA" in the name and combines 
     the data of all files into a single DataFrame. See also utils.process_CTUA_data()
