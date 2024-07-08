@@ -625,7 +625,8 @@ class Spring(Station):
             # annotate with mean catchment elevation
             ax.text(0.05, 0.05, f'EZH: {catchment_elevation:.0f} m', 
                     transform=ax.transAxes, fontsize=6, 
-                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round', edgecolor='0.5'))
+                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round',
+                              edgecolor='0.5'))
             # style plot
             ax.set(xlabel='Elevation [m]', ylabel=r'$\delta^{18}O$ [‰]')
             ax.legend()
