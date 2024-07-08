@@ -622,6 +622,10 @@ class Spring(Station):
             ax.errorbar(x=spring_elevation, y=self.isotopes.d18o['mean'], 
                         yerr=self.isotopes.d18o['std'], marker='o', lw=0,
                         color=colors[0], label='Quelle')
+            # annotate with mean catchment elevation
+            ax.text(0.05, 0.05, f'EZH: {catchment_elevation:.0f} m', 
+                    transform=ax.transAxes, fontsize=6, 
+                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round', edgecolor='0.5'))
             # style plot
             ax.set(xlabel='Elevation [m]', ylabel=r'$\delta^{18}O$ [‰]')
             ax.legend()
