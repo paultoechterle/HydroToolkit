@@ -658,13 +658,13 @@ class GZUV:
                 df[col] = df[col].apply(lambda x: re.sub(r'<(\d+)', lambda m: str(float(m.group(1)) * 0.5), x) if isinstance(x, str) and re.match(r'<\d+', x) else x)
                 
                 # Replace bracketed numeric values with NaN
-                df[col].replace(to_replace=r'\[\d+,\d+\]', value=np.nan, regex=True, inplace=True)
+                df[col] = df[col].replace(to_replace=r'\[\d+,\d+\]', value=np.nan, regex=True)
                 
                 # Remove other brackets
-                df[col].replace(to_replace=r'\[|\]', value='', regex=True, inplace=True)
+                df[col] = df[col].replace(to_replace=r'\[|\]', value='', regex=True)
                 
                 # Replace 'n.a.' with NaN
-                df[col].replace(to_replace='n.a.', value=np.nan, regex=False, inplace=True)
+                df[col] = df[col].replace(to_replace='n.a.', value=np.nan, regex=False)
                 
                 # Convert commas to dots for numeric values
                 df[col] = df[col].apply(lambda x: str(x).replace(',', '.') if isinstance(x, str) else x)
