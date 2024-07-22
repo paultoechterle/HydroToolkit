@@ -15,7 +15,7 @@ setup(
         'wqchartpy',
         'scikit-learn'
     ],
-    include_package_data=True,
+    include_package_data=True,  # Ensure this is included only once
     package_data={
         'HydroToolkit': ['data/*.csv', 'data/*.xlsx', 'style/*.mplstyle'],
     },
@@ -33,5 +33,4 @@ setup(
     python_requires='>=3.6',
     license='MIT',
     keywords='hydrogeology timeseries data analysis plotting',
-    include_package_data=True,  # Include package data as specified in MANIFEST.in
 )
