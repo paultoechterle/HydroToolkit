@@ -834,6 +834,90 @@ def CTUA_format_for_plot(df:pd.DataFrame, label:str='label', color:str='k',
 
     return df
 
+# functions for Kassebaum plots
+def convert_data(ca, mg, so4, id):
+    mCa = 40.08 # g/mol
+    mMg = 24.31 # g/mol
+    mSO4 = 96.06 # g/mol
+
+    Ca = ca / mCa # mmol/L
+    Mg = mg / mMg # mmol/L
+    SO4 = so4 / mSO4 # mmol/L
+
+    ion_sum = Ca + Mg + SO4
+    pCa = Ca / ion_sum *100
+    pMg = Mg / ion_sum *100
+    pSO4 = SO4 / ion_sum *100
+    
+    ions = pd.DataFrame({"Sample": id, "Ca": Ca, "Mg": Mg, "SO4": SO4,
+                          "pCa": pCa, "pMg": pMg, "pSO4": pSO4})
+    return ions
+
+def ternary_plot(figsize:tuple=(5,5)):
+    fig, ax = plt.subplots(figsize=figsize, subplot_kw={'projection':'ternary'})
+    # ax = plt.subplot(projection='ternary')
+    ax.set_tlabel(r'$Mg^{2+}$')
+    ax.set_llabel(r'$SO_4^{2-}$')
+    ax.set_rlabel(r'$Ca^{2+}$')
+
+    # dolomit wasser
+    t = [.51,  .41,   .34,   .44]
+    l = [.0 ,  .0,    .1,    .1]
+    r = [.47,  .56,   .56,   .46]
+    f1 = ax.fill(t, l, r, alpha=0.4, label='Dolomit')
+
+    # dolomit-kalziumkarbonat wasser
+    t = [.41,  .31,   .25,   .34]
+    l = [.0,   .0,    .1,    .1]
+    r = [.56,  .65,   .65,   .56]
+    f2 = ax.fill(t, l, r, alpha=0.4, label='Dolomit/Kalk')
+
+    # kalziumkarbonat wasser
+    t = [.31,  .22,   .16,   .25]
+    l = [.0,   .0,    .1,    .1]
+    r = [.65,  .74,   .74,   .65]
+    f3 = ax.fill(t, l, r, alpha=0.4, label='Kalk')
+
+    # sulfatbetontes dolomit wasser
+    t = [.40,  .33,   .20,   .27]
+    l = [.1,   .1,    .37,   .36]
+    r = [.49,  .57,   .43,   .36]
+    f4 = ax.fill(t, l, r, alpha=0.4, label='Sulfat-Dolomit')
+
+    # sulfatbetontes kalziumkarbonat wasser
+    t = [.33,  .26,   .13,   .20]
+    l = [.10,  .10,   .37,   .37]
+    r = [.57,  .64,   .51,   .43]
+    f5 = ax.fill(t, l, r, alpha=0.4, label='Sulfat-Kalk')
+
+    # sulfatreiches wasser
+    t = [.27,  .17,   .12,   .23]
+    l = [.36,  .37,   .47,   .45]
+    r = [.36,  .47,   .42,   .31]
+    f6 = ax.fill(t, l, r, alpha=0.4, label='Sulfat')
+
+    return fig, ax
+
+def cross_plot(figsize:tuple=(5,3)):
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set(xlabel='$Ca^{2+}$ [mmol/L]', ylabel='$Mg^{2+}$ [mmol/L]')
+
+    alluv = np.array([(1.58,0.21),(1.74,0.26),(1.93,0.30),(2.07,0.34),(2.24,0.37),(2.42,0.39),(2.56,0.40),(2.62,0.40),(2.70,0.39),(2.73,0.38),(2.75,0.36),(2.74,0.34),(2.70,0.31),(2.62,0.27),(2.54,0.25),(2.36,0.19),(2.21,0.15),(2.04,0.11),(1.88,0.07),(1.68,0.04),(1.57,0.02),(1.45,0.01),(1.36,0.01),(1.29,0.02),(1.25,0.03),(1.24,0.05),(1.25,0.07),(1.28,0.09),(1.34,0.12),(1.40,0.15),(1.48,0.18)])
+    co3 = np.array([(1.42,0.40),(1.47,0.40),(1.52,0.38),(1.57,0.37),(1.59,0.33),(1.58,0.30),(1.54,0.27),(1.46,0.23),(1.36,0.20),(1.20,0.16),(1.02,0.13),(0.89,0.11),(0.77,0.10),(0.68,0.10),(0.59,0.10),(0.52,0.10),(0.43,0.12),(0.36,0.14),(0.31,0.18),(0.31,0.22),(0.35,0.25),(0.46,0.30),(0.60,0.35),(0.83,0.39)])
+    dolo = np.array([(0.53,0.91),(0.66,0.99),(0.87,1.07),(1.18,1.16),(1.43,1.22),(1.71,1.28),(1.97,1.32),(2.27,1.33),(2.47,1.33),(2.56,1.31),(2.63,1.28),(2.64,1.23),(2.61,1.18),(2.55,1.14),(2.45,1.08),(2.32,1.03),(2.16,0.99),(1.08,0.74),(0.97,0.72),(0.73,0.71),(0.61,0.72),(0.50,0.74),(0.45,0.77),(0.43,0.83),(0.46,0.87),])
+    ax.fill(alluv[:,0], alluv[:,1], alpha=0.5, label='Quartäre Aquifere')
+    ax.fill(dolo[:,0], dolo[:,1], alpha=0.5, label='Dolomitwasser')
+    ax.fill(co3[:,0], co3[:,1], alpha=0.5, label='Kalziumkarbonatwasser')
+
+    x = np.linspace(0, 1.5, 10)
+
+    ax.plot(x, x, alpha=0.9, c='k', ls='--', label='1:1')
+    ax.plot(2*x, x, alpha=0.6, c='k', ls='--', label='2:1')
+    ax.plot(4*x, x, alpha=0.3, c='k', ls='--', label='4:1')
+    ax.set(xlim=(0, 3), ylim=(0, 1.5))
+
+    return fig, ax
+
 if __name__ == "__main__":
 
     path_ctua = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\01-Laborprüfberichte"
