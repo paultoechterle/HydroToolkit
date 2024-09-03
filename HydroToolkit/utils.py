@@ -567,6 +567,57 @@ def GMWL(limit = (-25,5)) -> dict:
     gmwl = {'d18o': d18o, 'd2h': d2h}
     return gmwl
 
+class isotope_elevation():
+    def __init__(self, x, model:int=1):
+
+        models = {1: 'Ibk-Ku-Scha-Ach',
+                  2: 'Benischke et al. (2010)',
+                  3: 'Hager u. Floesche (2015)',
+                  4: 'FT v4',
+                  5: 'Lechner et al. (2019)',
+                  6: 'Alle',
+                  7: 'Mittelwert'}
+        
+        self.x = x
+        self.model = model
+        self.model_name = models[model]
+        self.y = None
+
+        if model == 1:
+            self.y = self.model_1(self.x)
+        elif model == 2:
+            self.y = self.model_2(self.x)
+        elif model == 3:
+            self.y = self.model_3(self.x)
+        elif model == 4:
+            self.y = self.model_4(self.x)
+        elif model == 5:
+            self.y = self.model_5(self.x)
+        elif model == 6:
+            self.y = [self.model_1(self.x), self.model_2(self.x), 
+                      self.model_3(self.x), self.model_4(self.x), self.model_5(self.x)]
+        elif model == 7:
+            self.y = np.mean([self.model_1(self.x), self.model_2(self.x), 
+                              self.model_3(self.x), self.model_4(self.x), self.model_5(self.x)])
+                      
+        return None
+        
+    def model_1(self, x):
+        # FT-Ibk-Ku-Scha-Ach
+        return x*-500.77 - 4560.97
+    def model_2(self, x):
+        # Benischke et al 2010
+        return x*-573.82 - 5551.62
+    def model_3(self, x):
+        # FT-Hager&Floesche 2015
+        return x*-423.20 - 3831.90
+    def model_4(self, x):
+        # FT v4
+        return x*-387.15 - 3320.76
+    def model_5(self, x):
+        # Lechner et al 2019
+        return x*-490.84 - 4753.89
+
 # GZÜV Readout from excel sheets and data Handling
 class GZUV:
     def __init__(self, path:str, top:int=38, bottom:int=25):
@@ -919,7 +970,9 @@ def cross_plot(figsize:tuple=(5,3)):
     return fig, ax
 
 if __name__ == "__main__":
-
-    path_ctua = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\01-Laborprüfberichte"
-    df = combine_CTUA_data(path_ctua)
-    df.to_excel(path_ctua + '/CTUA_combined.xlsx', index=False)
+    isos = np.linspace(-15,-5, 10)
+    elev = isotope_elevation(isos, model=7)
+    print(elev.y)
+    # path_ctua = r"M:\WASSERRESSOURCEN - GQH Stufe 1 2024 - 2400613\C GRUNDLAGEN\01-Daten\01-Laborprüfberichte"
+    # df = combine_CTUA_data(path_ctua)
+    # df.to_excel(path_ctua + '/CTUA_combined.xlsx', index=False)
