@@ -239,7 +239,7 @@ class Plotter:
         fig, ax = plt.subplots(figsize=(page, page*0.4))
         ax.fill_between(stats.index, stats['min'], stats['max'], 
                         color='#0099ff', alpha=0.5, label='Min/Max')
-        ax.plot(stats.index, stats['mean'], color='black', label='Mean')
+        ax.plot(stats.index, stats['mean'], color='black', label='Mittelwert')
         ax.plot(stats.index, stats['median'], color='black', linestyle='--', label='Median')
 
         months = ['FEB', 'APR', 'JUN', 'AUG', 'OCT', 'DEC']
@@ -278,7 +278,7 @@ class Plotter:
                             color=colors[i], alpha=0.5, label='Min/Max')
             
             # Plot mean
-            ax.plot(stats.index, stats['mean'], color=colors[i], label='Mean')
+            ax.plot(stats.index, stats['mean'], color=colors[i], label='Mittelwert')
             
             # Plot median
             ax.plot(stats.index, stats['median'], color=colors[i], linestyle='--',
@@ -287,7 +287,7 @@ class Plotter:
             ax.set_ylabel(self.translate_unit.get(variables[i], variables[i]))
             ax.legend()
 
-        axes[-1].set_xlabel('Time')
+        axes[-1].set_xlabel('Tag des Jahres')
         months = ['FEB', 'APR', 'JUN', 'AUG', 'OCT', 'DEC']
         month_days = [32, 91, 152, 213, 274,335]
         axes[-1].set_xticks(ticks=month_days, labels=months)
@@ -329,7 +329,7 @@ class Plotter:
                          ax=axes[i], legend=False)
             axes[i].set_xlabel(self.translate_unit.get(variable, variable))
 
-        axes[0].set_ylabel('Cumulative Frequency')
+        axes[0].set_ylabel('Kumulative Frequenz')
 
         sm = plt.cm.ScalarMappable(cmap='viridis', 
                                    norm=plt.Normalize(vmin=data['year'].min(),
@@ -394,7 +394,7 @@ class Plotter:
                                    norm=plt.Normalize(vmin=df['year'].min(), vmax=df['year'].max()))
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=plt.gca())
-        cbar.set_label('Year')
+        cbar.set_label('Jahr')
         cbar.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
 
         return fig, ax
