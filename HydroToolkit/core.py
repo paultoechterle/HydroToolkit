@@ -635,7 +635,7 @@ class Spring(Station):
                     bbox=dict(facecolor='white', alpha=0.7, boxstyle='round',
                               edgecolor='0.5'))
             # style plot
-            ax.set(xlabel='Höhe [m]', ylabel=r'$\delta^{18}O$ [‰]')
+            ax.set(ylabel='Höhe [m]', xlabel=r'$\delta^{18}O$ [‰]')
             ax.legend()
             plt.tight_layout()
             return fig, ax
