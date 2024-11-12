@@ -570,10 +570,10 @@ def GMWL(limit = (-25,5)) -> dict:
 class isotope_elevation():
     def __init__(self, x, model:int=1):
 
-        models = {1: 'Ibk-Ku-Scha-Ach',
-                  2: 'Benischke et al. (2010)',
-                  3: 'Hager u. Floesche (2015)',
-                  4: 'FT v4',
+        models = {1: 'Thalheim et al. (2022)',
+                  2: 'Thalheim et al. (2022)',
+                  3: 'Benischke et al. (2010)',
+                  4: 'Hager u. Floesche (2015)',
                   5: 'Lechner et al. (2019)',
                   6: 'Alle',
                   7: 'Mittelwert'}
@@ -606,14 +606,14 @@ class isotope_elevation():
         # FT-Ibk-Ku-Scha-Ach
         return x*-500.77 - 4560.97
     def model_2(self, x):
-        # Benischke et al 2010
-        return x*-573.82 - 5551.62
-    def model_3(self, x):
-        # FT-Hager&Floesche 2015
-        return x*-423.20 - 3831.90
-    def model_4(self, x):
         # FT v4
         return x*-387.15 - 3320.76
+    def model_3(self, x):
+        # Benischke et al 2010
+        return x*-573.82 - 5551.62
+    def model_4(self, x):
+        # Hager&Floesche 2015
+        return x*-423.20 - 3831.90
     def model_5(self, x):
         # Lechner et al 2019
         return x*-490.84 - 4753.89
