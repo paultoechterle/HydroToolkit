@@ -511,10 +511,8 @@ class Spring(Station):
             self.isotopes = utils.iso_df_mean.loc[int(self.stammdaten['HZB-Nummer'])]
         except ValueError:
             print('No isotope data found for this station')
-            self.isotopes = None
         except KeyError:
             print('No isotope data found for this station')
-            self.isotopes = None
     
     @utils.suppress_print
     def mean_catchment_elevation(self, spring_elevation:float, plot:bool=False):
