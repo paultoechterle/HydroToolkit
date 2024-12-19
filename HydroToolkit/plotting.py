@@ -528,10 +528,6 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
     
-def mann_kendall_test(y_data, period=365):
-    # Placeholder for the actual Mann-Kendall test implementation
-    slope, intercept = np.polyfit(np.arange(len(y_data)), y_data, 1)
-    return {'slope': slope, 'intercept': intercept, 'p-value': 0.01}
 
 def plot_ts_hist(df, trend: bool = False):
     """plot combined timeseries and histogram for all numeric columns
@@ -589,11 +585,11 @@ def plot_ts_hist(df, trend: bool = False):
         if trend:
             y_data = df[variable].resample('D').mean()
             x_data = y_data.reset_index().index / 365
-            trend_result = mann_kendall_test(y_data, period=365)
-            y_pred = x_data * trend_result['slope'] + trend_result['intercept']
-            print(f'Mann-Kendall: {variable} = {trend_result["slope"]:.2f} * year + {trend_result["intercept"]:.2f}, p-value: {trend_result["p-value"]:.2}')
+            mk_slope = utils.mann_kendall_test(y_data, period=365)
+            y_pred = x_data * mk_slope['slope'] + mk_slope['intercept']
+            print(f'Mann-Kendall: {variable} = {mk_slope["slope"]:.2f} * year + {mk_slope["intercept"]:.2f}, p-value: {mk_slope["p-value"]:.2}')
 
-            if trend_result['p-value'] < 0.05:
+            if mk_slope['p-value'] < 0.05:
                 ax_ts.plot(y_data.index, y_pred, c='black', ls='--', 
                            label='Mann-Kendall slope')
 
