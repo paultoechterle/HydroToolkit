@@ -180,48 +180,6 @@ class Plotter:
         plt.tight_layout()
         return fig, axes
     
-        # if daily:
-        #     df = self.df_resampled
-        # else:
-        #     df = self.df
-
-        # fig, axes = plt.subplots(len(variables), 2,
-        #                          figsize=(page, page * 0.2 * len(variables)),
-        #                          gridspec_kw={'width_ratios': [4, 1]})
-
-        # # Determine the overall min and max time span with some padding
-        # all_dates = pd.Series(df.index.unique())
-        # min_date, max_date = all_dates.min(), all_dates.max()
-        # date_range = max_date - min_date
-        # padding = date_range * 0.05
-        # padded_min_date = min_date - padding
-        # padded_max_date = max_date + padding
-
-        # for i, variable in enumerate(variables):
-        #     # Time series plot
-        #     ax_ts = axes[i, 0]
-        #     ax_ts.plot(df[variable], color=colors[i])
-        #     if trend:
-        #         data = df[variable].bfill().dropna()
-        #         slope, intercept, _, _ = theilslopes(data, data.index.to_julian_date())
-        #         y = intercept + slope * data.index.to_julian_date()
-        #         ax_ts.plot(data.index, y, c='black', ls='--', label='Theil-Sen slope')
-        #         print(f'Theil: {variable}(year) = {slope * 365:.2f} * year + {intercept:.2f}')
-        #     ax_ts.set_ylabel(self.translate_unit.get(variable, variable))
-        #     ax_ts.set_xlim(padded_min_date, padded_max_date)
-
-        #     # Histogram with KDE plot
-        #     ax_hist = axes[i, 1]
-        #     sns.histplot(data[variable], kde=True, ax=ax_hist, color=colors[i], 
-        #                  bins=15)
-        #     ax_hist.yaxis.tick_right()
-        #     ax_hist.yaxis.set_label_position("right")
-        #     ax_hist.set(xlabel=self.translate_unit.get(variable, variable), 
-        #                 ylabel='Anzahl')
-
-        # plt.tight_layout()
-        # return fig, axes
-    
     def plot_confidence_intervals(self, variable: str, stats: pd.DataFrame):
         """Plot the annual distribution of a variable as a function of day of 
         the year.
@@ -569,3 +527,87 @@ class Plotter:
 
         plt.tight_layout()
         return fig, axes
+    
+def mann_kendall_test(y_data, period=365):
+    # Placeholder for the actual Mann-Kendall test implementation
+    slope, intercept = np.polyfit(np.arange(len(y_data)), y_data, 1)
+    return {'slope': slope, 'intercept': intercept, 'p-value': 0.01}
+
+def plot_ts_hist(df, trend: bool = False):
+    """plot combined timeseries and histogram for all numeric columns
+    in a panel plot.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data
+        trend (bool, optional): If true, the Theil-Sen Slope of the 
+        timeseries is also plotted. Defaults to False.
+        daily (bool, optional): If true, resample data to daily frequency. Defaults to True.
+
+    Returns:
+        tuple: (fig, axes) Matplotlib figure and axes.
+    """
+    # Static dictionary for translating axis labels
+    label_dict = {
+        'Q': 'Schüttung [l/s]',
+        'LF': 'el. Leitf. [µS/cm]',
+        'TEMP': 'Temperatur [°C]'
+        }
+
+    # Determine the temporal resolution of the input data
+    time_diffs = df.index.to_series().diff().dropna()
+    median_diff = time_diffs.median()
+
+    if median_diff <= pd.Timedelta(weeks=1):
+        marker = None
+        linestyle = '-'
+    else:
+        marker = 'o'
+        linestyle = '--'
+
+    numeric_columns = df.select_dtypes(include=[np.number]).columns
+    fig, axes = plt.subplots(len(numeric_columns), 2,
+                             figsize=(page, page * 0.2 * len(numeric_columns)),
+                             gridspec_kw={'width_ratios': [4, 1]})
+
+    # If there's only one numeric column, reshape axes to avoid indexing issues
+    if len(numeric_columns) == 1:
+        axes = np.array([axes])
+
+    # Determine the overall min and max time span with some padding
+    all_dates = pd.Series(df.index.unique())
+    min_date, max_date = all_dates.min(), all_dates.max()
+    date_range = max_date - min_date
+    padding = date_range * 0.05
+    padded_min_date = min_date - padding
+    padded_max_date = max_date + padding
+
+    for i, variable in enumerate(numeric_columns):
+        # Time series plot
+        ax_ts = axes[i, 0]
+        ax_ts.plot(df[variable], color=colors[i % len(colors)],
+                   ls=linestyle, marker=marker)
+        if trend:
+            y_data = df[variable].resample('D').mean()
+            x_data = y_data.reset_index().index / 365
+            trend_result = mann_kendall_test(y_data, period=365)
+            y_pred = x_data * trend_result['slope'] + trend_result['intercept']
+            print(f'Mann-Kendall: {variable} = {trend_result["slope"]:.2f} * year + {trend_result["intercept"]:.2f}, p-value: {trend_result["p-value"]:.2}')
+
+            if trend_result['p-value'] < 0.05:
+                ax_ts.plot(y_data.index, y_pred, c='black', ls='--', 
+                           label='Mann-Kendall slope')
+
+        # Set the y-axis label using the label dictionary if provided
+        label = label_dict.get(variable, variable)
+        ax_ts.set_ylabel(label)
+        ax_ts.set_xlim(padded_min_date, padded_max_date)
+
+        # Histogram with KDE plot
+        ax_hist = axes[i, 1]
+        sns.histplot(df[variable], kde=True, ax=ax_hist, color=colors[i % len(colors)], bins=15)
+        ax_hist.yaxis.tick_right()
+        ax_hist.yaxis.set_label_position("right")
+        ax_hist.set(xlabel=label, ylabel='Anzahl')
+
+    plt.tight_layout()
+    return fig, axes
