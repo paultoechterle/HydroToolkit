@@ -94,7 +94,11 @@ def read_data(path: str, variable: str = 'x') -> pd.DataFrame:
                      converters={variable: lambda x: x.strip().replace(',', '.')})
 
     df.replace('Lücke', np.nan, inplace=True)  # correct NaN values
-    df[variable] = df[variable].astype('float')  # reformat str to float
+    try:
+        df[variable] = df[variable].astype('float')  # reformat str to float
+    except ValueError:
+        print(f"Error: Could not convert column '{variable}' to float. Check for invalid values.")
+        raise
     df['time'] = pd.to_datetime(df.time, dayfirst=True)  # reformat datetime
 
     return df[df.columns[:-1]]
@@ -573,7 +577,7 @@ class isotope_elevation():
         models = {1: 'Thalheim et al. (2022)',
                   2: 'Thalheim et al. (2022)',
                   3: 'Benischke et al. (2010)',
-                  4: 'Hager u. Floesche (2015)',
+                  4: 'Hager u. Foelsche (2015)',
                   5: 'Lechner et al. (2019)',
                   6: 'Alle',
                   7: 'Mittelwert'}
@@ -612,7 +616,7 @@ class isotope_elevation():
         # Benischke et al 2010
         return x*-573.82 - 5551.62
     def model_4(self, x):
-        # Hager&Floesche 2015
+        # Hager&Foelsche 2015
         return x*-423.20 - 3831.90
     def model_5(self, x):
         # Lechner et al 2019
