@@ -647,13 +647,16 @@ def plot_seasonality(df):
         axes = [axes]
 
     for i, var in enumerate(available_vars):
-        sns.boxplot(x='month', y=var, data=df, ax=axes[i], color=colors[i], fliersize=0, fill=False, width=0.3)
-        sns.stripplot(x='month', y=var, data=df, ax=axes[i], color=colors[i], size=3)
+        # Plot inv isible dummy dataset to ensure all months are present
+        axes[i].scatter(range(1,13), np.full_like(range(1,13), df[var].mean()), alpha=0)
+        axes[i].scatter(df['month'], df[var], color=colors[i], s=5, label='Einzelmessungen')
+        axes[i].plot(df.groupby('month')[var].median(), color=colors[i], ls='--', 
+                     marker='o', lw=1, label='Median')
         axes[i].set_ylabel(translate_unit.get(var, var))
-
-    axes[-1].set_xlabel('Monat')
-    axes[-1].set_xticks(range(0, 12))
+        axes[i].legend()
+    
+    axes[-1].set_xticks(range(1,13))
     axes[-1].set_xticklabels(['Jän', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'])
-
+    axes[-1].set_xlabel('')
     plt.tight_layout()
     return fig, axes
