@@ -314,6 +314,48 @@ def calculate_halflife(alpha:float):
     """    
     return np.log(2)/alpha
 
+
+def calc_catchment_area(mean_discharge, coords, mean_precip=None):
+        """Calculate the minimum catchment area from mean discharge and precipitation estimates.
+        This function calculates the minimum catchment area based on the provided mean discharge 
+        and precipitation values. If the mean precipitation is not provided, it is calculated 
+        using the Spartacus dataset and averaged over the observation period from 1990 to 2020. 
+        Evapotranspiration is neglected in this calculation.
+        Args:
+            mean_discharge (float): The mean discharge in liters per second (l/s).
+            coords (tuple): A tuple containing the latitude and longitude coordinates (lat, lon).
+            mean_precip (float, optional): The mean precipitation in millimeters per square meter (mm/m²). 
+                                           If not provided, it will be calculated from the Spartacus dataset.
+            float: The calculated catchment area in square kilometers (km²).
+        Example:
+            >>> mean_discharge = 500  # l/s
+            >>> coords = (47.0, 8.0)  # latitude and longitude
+            >>> calc_catchment_area(mean_discharge, coords)
+            Catchment area @ 500 l/s and 1000 mm/m² = 15.78 km²
+            15.78
+        """
+        t0 = pd.Timestamp('1991-01-01')
+        tn = pd.Timestamp('2020-01-01')
+        mean_discharge 
+        if mean_precip is None:
+
+            params = {
+            "parameters": "RR",
+            "start": t0,
+            "end": tn,
+            "lat_lon": f"{coords[0]},{coords[1]}",
+            "format": "json"
+        }
+            mean_precip = read_spartacus(params)['RR'].resample('Y').sum().mean()
+        seconds_in_year = 60 * 60 * 24 * 365
+        mean_discharge_lpy = mean_discharge * seconds_in_year
+        catchment_area = mean_discharge_lpy / mean_precip  # in m²
+        catchment_area = catchment_area / 1000 ** 2  # in km²
+
+        print(f'Catchment area @ {mean_discharge:.0f} l/s and {mean_precip:.0f} mm/m² = {catchment_area:.2f} km² ')
+        return catchment_area
+    
+
 def compute_cross_correlation(ts1:pd.Series, ts2:pd.Series, 
                               plot:bool=False) -> Union[tuple, None]:
     """
