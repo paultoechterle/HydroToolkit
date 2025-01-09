@@ -12,6 +12,11 @@ cm = 1/2.54 # inch/cm conversion factor
 page = (21.0 - 1.65 - 1.25)*cm # A4 page
 colors = ['#0099ff', '#89b576', '#f27977', '#ff6699',
           '#99e6ff', '#006600', '#fae6ff']
+translate_unit = {
+            'Q': 'Schüttung [l/s]',
+            'LF': 'el. Leitf. [µS/cm]',
+            'TEMP': 'Temperatur [°C]'
+        }
 
 # def save_plot(func):
 #     @functools.wraps(func)
@@ -604,6 +609,51 @@ def plot_ts_hist(df, trend: bool = False):
         ax_hist.yaxis.tick_right()
         ax_hist.yaxis.set_label_position("right")
         ax_hist.set(xlabel=label, ylabel='Anzahl')
+
+    plt.tight_layout()
+    return fig, axes
+
+def plot_seasonality(df):
+    """
+    Plots the seasonality of the variables 'Q', 'LF', and 'TEMP' in the given DataFrame.
+    This function creates boxplots and strip plots for each of the available variables
+    ('Q', 'LF', 'TEMP') in the DataFrame, grouped by month. The DataFrame must have a 
+    datetime index.
+    Parameters:
+    df (pandas.DataFrame): The input DataFrame containing the data to be plotted. 
+                           It must have a datetime index and at least one of the columns 
+                           'Q', 'LF', or 'TEMP'.
+    Returns:
+    tuple: A tuple containing the figure and axes objects of the created plots.
+    Raises:
+    ValueError: If the DataFrame does not contain any of the required variables: 'Q', 'LF', 'TEMP'.
+    """
+
+
+    # Determine which variables are present in the DataFrame
+    variables = ['Q', 'LF', 'TEMP']
+    available_vars = [var for var in variables if var in df.columns]
+
+    if not available_vars:
+        raise ValueError("The DataFrame does not contain any of the required variables: 'Q', 'LF', 'TEMP'.")
+
+    # Extract month from the datetime index
+    df['month'] = df.index.month
+
+    # Create subplots based on the number of available variables
+    fig, axes = plt.subplots(len(available_vars), 1, figsize=(page*0.8, page*0.2*len(available_vars)), sharex=True)
+
+    if len(available_vars) == 1:
+        axes = [axes]
+
+    for i, var in enumerate(available_vars):
+        sns.boxplot(x='month', y=var, data=df, ax=axes[i], color=colors[i], fliersize=0, fill=False, width=0.3)
+        sns.stripplot(x='month', y=var, data=df, ax=axes[i], color=colors[i], size=3)
+        axes[i].set_ylabel(translate_unit.get(var, var))
+
+    axes[-1].set_xlabel('Monat')
+    axes[-1].set_xticks(range(0, 12))
+    axes[-1].set_xticklabels(['Jän', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'])
 
     plt.tight_layout()
     return fig, axes

@@ -15,7 +15,7 @@ setup(
         'wqchartpy',
         'scikit-learn'
     ],
-    include_package_data=True,  # Ensure this is included only once
+    include_package_data=True,
     package_data={
         'HydroToolkit': ['data/*.csv', 'data/*.xlsx', 'style/*.mplstyle'],
     },
