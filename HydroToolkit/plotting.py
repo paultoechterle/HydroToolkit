@@ -641,7 +641,7 @@ def plot_seasonality(df):
     df['month'] = df.index.month
 
     # Create subplots based on the number of available variables
-    fig, axes = plt.subplots(len(available_vars), 1, figsize=(page*0.8, page*0.2*len(available_vars)), sharex=True)
+    fig, axes = plt.subplots(len(available_vars), 1, figsize=(page, page*0.2*len(available_vars)), sharex=True)
 
     if len(available_vars) == 1:
         axes = [axes]
