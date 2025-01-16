@@ -280,7 +280,7 @@ class Station:
         return data
 
     @utils.suppress_print
-    def calc_catchment_area(self):
+    def calc_catchment_area(self, loss=0.5):
 
         """calculate the minimum catchment area from mean dicharge and 
         precipitation estimates. Mean precipitation values are calulated from
@@ -293,7 +293,7 @@ class Station:
         t0 = self.df.index.min()
         tn = self.df.index.max()
         mean_discharge = self.df.Q.mean()
-        area = utils.calc_catchment_area(mean_discharge, self.metadata['coordinates'], loss=0.5)
+        area = utils.calc_catchment_area(mean_discharge, self.metadata['coordinates'], loss=loss)
         # mean_precip = self.pull_spartacus(t0, tn)['RR'].resample('Y').sum().mean()
         # seconds_in_year = 60 * 60 * 24 * 365
         # mean_discharge_lpy = mean_discharge * seconds_in_year
