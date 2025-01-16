@@ -281,6 +281,7 @@ class Station:
 
     @utils.suppress_print
     def calc_catchment_area(self):
+
         """calculate the minimum catchment area from mean dicharge and 
         precipitation estimates. Mean precipitation values are calulated from
         spartacus dataset and averaged over the observation period.
@@ -292,14 +293,15 @@ class Station:
         t0 = self.df.index.min()
         tn = self.df.index.max()
         mean_discharge = self.df.Q.mean()
-        mean_precip = self.pull_spartacus(t0, tn)['RR'].resample('Y').sum().mean()
-        seconds_in_year = 60 * 60 * 24 * 365
-        mean_discharge_lpy = mean_discharge * seconds_in_year
-        catchment_area = mean_discharge_lpy / mean_precip  # in m²
-        catchment_area = catchment_area / 1000 ** 2  # in km²
+        area = utils.calc_catchment_area(mean_discharge, self.metadata['coordinates'], loss=0.5)
+        # mean_precip = self.pull_spartacus(t0, tn)['RR'].resample('Y').sum().mean()
+        # seconds_in_year = 60 * 60 * 24 * 365
+        # mean_discharge_lpy = mean_discharge * seconds_in_year
+        # catchment_area = mean_discharge_lpy / mean_precip  # in m²
+        # catchment_area = catchment_area / 1000 ** 2  # in km²
 
-        print(f'Catchment area @ {mean_discharge:.0f} l/s and {mean_precip:.0f} mm/m² = {catchment_area:.2f} km² ')
-        return catchment_area
+        # print(f'Catchment area @ {mean_discharge:.0f} l/s and {mean_precip:.0f} mm/m² = {catchment_area:.2f} km² ')
+        return area
     
     @utils.suppress_print
     def recession_curve(self, t0: pd.Timestamp, tn: pd.Timestamp, 
