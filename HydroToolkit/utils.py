@@ -10,6 +10,8 @@ import numpy as np
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 import pymannkendall as mk
+import xarray as xr
+from io import BytesIO
 
 cm = 1/2.54 # inch/cm conversion factor
 page = (21.0 - 1.65 - 1.25)*cm # A4 page
@@ -490,10 +492,10 @@ def boussinesq_model(t: float, Q0: float, alpha: float) -> float:
     return Q0 / (1+alpha*t)**2
 
 def read_geosphere(dataset: str, t0: pd.Timestamp, tn: pd.Timestamp, 
-                   latitude: float, longitude: float, parameters: list) -> pd.DataFrame:
+                   coords: list, parameters: list) -> pd.DataFrame:
     """
-    Fetches point time series data from the GEOSPHERE API and returns it as a pandas DataFrame.
-    For a list of ressources refer to the API documentation at 
+    Fetches point time series or gridded data from the GEOSPHERE API and returns it as a pandas DataFrame or xarray Dataset.
+    For a list of resources refer to the API documentation at 
     https://dataset.api.hub.geosphere.at/v1/docs/user-guide/resource.html#resources
     
     Parameters:
@@ -501,88 +503,148 @@ def read_geosphere(dataset: str, t0: pd.Timestamp, tn: pd.Timestamp,
     dataset : str
         The dataset to fetch from the GEOSPHERE API. Must be one of the following:
         'spartacus_daily', 'spartacus_monthly', 'spartacus_seasonal', 'spartacus_annual', 
-        'winfore_daily', 'snowgrid_daily'.
+        'winfore', 'snowgrid', 'spartacus_daily_grid', 'spartacus_monthly_grid',
+        'spartacus_seasonal_grid', 'spartacus_annual_grid', 'winfore_grid', 'snowgrid_grid'.
     t0 : pd.Timestamp
         The start timestamp for the data query.
     tn : pd.Timestamp
         The end timestamp for the data query.
-    latitude : float
-        The latitude coordinate for the data query.
-    longitude : float
-        The longitude coordinate for the data query.
+    coords : list
+        A list of coordinates (WGS84) to specify the location of interest. If the requested
+        dataset is a timeseries dataset (i.e. a point location), the list should contain two 
+        floats [lat, lon]. If the requested dataset is a gridded dataset, the list should contain
+        four floats [min_lat, min_lon, max_lat, max_lon] to specify the bounding box of the 
+        requested area.
     parameters : list
         A list of parameters to fetch from the dataset. Each parameter should be a string.
         For a list of available parameters, refer to the documentation of the respective
-        geosphere austria dataset.
+        GEOSPHERE Austria dataset.
 
     Returns:
     --------
-    pd.DataFrame
-        A pandas DataFrame containing the requested geospatial time series data.
+    pd.DataFrame or xr.Dataset
+        A pandas DataFrame containing the requested geospatial time series data if the dataset is a timeseries dataset.
+        An xarray Dataset containing the requested gridded data if the dataset is a gridded dataset.
 
     Raises:
     -------
     ValueError
-        If the specified dataset is not available.
+        If the specified dataset is not available or if the coordinates are not valid.
     """
 
     # URL endpoints for the API
+    # Point time series data:
     # SPARTACUS v2 reanalysis datasets
     spartacus_daily = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/spartacus-v2-1d-1km"
     spartacus_monthly = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/spartacus-v2-1m-1km"
     spartacus_seasonal = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/spartacus-v2-1q-1km"
     spartacus_annual = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/spartacus-v2-1y-1km"
-
     # WINFORE v2
-    winfore_daily = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/winfore-v2-1d-1km"
-
+    winfore = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/winfore-v2-1d-1km"
     # Snowgrid Climate v2
-    snowgrid_daily = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/snowgrid_cl-v2-1d-1km"
+    snowgrid = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/snowgrid_cl-v2-1d-1km"
 
+    # gridded datasets
+    # SPARTACUS v2 reanalysis datasets
+    spartacus_daily_grid = "https://dataset.api.hub.geosphere.at/v1/grid/historical/spartacus-v2-1d-1km"
+    spartacus_monthly_grid = "https://dataset.api.hub.geosphere.at/v1/grid/historical/spartacus-v2-1m-1km"
+    spartacus_seasonal_grid = "https://dataset.api.hub.geosphere.at/v1/grid/historical/spartacus-v2-1q-1km"
+    spartacus_annual_grid = "https://dataset.api.hub.geosphere.at/v1/grid/historical/spartacus-v2-1y-1km"
+    # WINFORE v2
+    winfore_grid = "https://dataset.api.hub.geosphere.at/v1/grid/historical/winfore-v2-1d-1km"
+    # Snowgrid Climate v2
+    snowgrid_grid = "https://dataset.api.hub.geosphere.at/v1/grid/historical/snowgrid_cl-v2-1d-1km"
+    
     datasets = {
-        "spartacus_daily": spartacus_daily,
-        "spartacus_monthly": spartacus_monthly,
-        "spartacus_seasonal": spartacus_seasonal,
-        "spartacus_annual": spartacus_annual,
-        "winfore_daily": winfore_daily,
-        "snowgrid_daily": snowgrid_daily
+        'spartacus_daily': spartacus_daily,
+        'spartacus_monthly': spartacus_monthly,
+        'spartacus_seasonal': spartacus_seasonal,
+        'spartacus_annual': spartacus_annual,
+        'winfore': winfore,
+        'snowgrid': snowgrid,
+        'spartacus_daily_grid': spartacus_daily_grid,
+        'spartacus_monthly_grid': spartacus_monthly_grid,
+        'spartacus_seasonal_grid': spartacus_seasonal_grid,
+        'spartacus_annual_grid': spartacus_annual_grid,
+        'winfore_grid': winfore_grid,
+        'snowgrid_grid': snowgrid_grid
     }
 
-    # select dataset
-    if dataset not in datasets.keys():
-        raise ValueError(f"Dataset {dataset} not available. Choose from {datasets.keys()}")
-
+    # select dataset url
     url = datasets[dataset]
 
+
+    # INPUT CHECKS
+    # Ensure dataset is available
+    if dataset not in datasets.keys():
+        raise ValueError(f"Dataset {dataset} not available. Choose from {datasets.keys()}")
+    
     # Ensure parameters is a list of strings
     if not all(isinstance(param, str) for param in parameters):
         parameters = list(map(str, parameters))
+    
+    # check if dataset is gridded or timeseries
+    is_grid_dataset = dataset.endswith('_grid')
 
-    # create API request parameters
-    params = {
-        "parameters": ','.join(parameters),
-        "start": t0,
-        "end": tn,
-        "lat_lon": f"{latitude},{longitude}",
-        "format": "json"
-    }
-
-    # Make the request to download the JSON data
-    response = requests.get(url, params=params)
-
-    if response.status_code == 200:
-        data = response.json()
+    # Validate coordinates
+    if is_grid_dataset:
+        if len(coords) != 4:
+            raise ValueError("For gridded datasets, coords must contain four floats [min_lat, min_lon, max_lat, max_lon].")
+        if not all(isinstance(coord, (int, float)) for coord in coords):
+            raise ValueError("All coordinates must be floats or integers.")
     else:
-        print("Error:", response.status_code, response.text)
-        return None
+        if len(coords) != 2:
+            raise ValueError("For timeseries datasets, coords must contain two floats [lat, lon].")
+        if not all(isinstance(coord, (int, float)) for coord in coords):
+            raise ValueError("All coordinates must be floats or integers.")
+    
+    # create parameter dictionary, depending on dataset type (point or grid)
+    if is_grid_dataset: # if it is a gridded dataset
+        params = {
+            "parameters": ','.join(parameters),
+            "start": t0.isoformat(),
+            "end": tn.isoformat(),
+            "bbox": ','.join(map(str, coords)),
+            "output_format": "netcdf",
+            "filename": "testfile"
+        }
+        # Make the GET request
+        response = requests.get(url, params=params, headers={'accept': 'application/json'})
 
-    # Create a pandas DataFrame from the JSON data
-    dic = {}
-    for param in parameters:
-        dic[param] = data['features'][0]['properties']['parameters'][param]['data']
-    df = pd.DataFrame(dic, pd.to_datetime(data['timestamps']))
-    df.index = df.index.tz_localize(None)
-    return df
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Read the NetCDF data into an xarray dataset
+            dataset = xr.open_dataset(BytesIO(response.content))
+            return dataset
+        else:
+            print(f"Failed to retrieve data: {response.status_code} - {response.text}")
+            return None
+
+    else: # if it is timeseries dataset
+        params = {
+            "parameters": ','.join(parameters),
+            "start": t0.isoformat(),
+            "end": tn.isoformat(),
+            "lat_lon": f"{coords[0]},{coords[1]}",
+            "format": "json"
+        }
+
+        # Make the request to download the JSON data
+        response = requests.get(url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+        else:
+            print("Error:", response.status_code, response.text)
+            return None
+
+        # Create a pandas DataFrame from the JSON data
+        dic = {}
+        for param in parameters:
+            dic[param] = data['features'][0]['properties']['parameters'][param]['data']
+        df = pd.DataFrame(dic, pd.to_datetime(data['timestamps']))
+        df.index = df.index.tz_localize(None)
+        return df
 
 @suppress_print
 def read_spartacus(params:dict) -> pd.DataFrame:
