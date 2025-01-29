@@ -163,7 +163,7 @@ class Plotter:
                 
                 if trend['p-value'] < 0.05:
                     ax_ts.plot(y_data.index, y_pred, c='black', ls='--', 
-                               label='Mann-Kendall slope')
+                               label='Theil-Sen slope')
 
                 # data = df[variable].bfill().dropna()
                 # slope, intercept, _, _ = theilslopes(data, data.index.to_julian_date())

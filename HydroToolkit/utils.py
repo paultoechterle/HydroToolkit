@@ -314,36 +314,37 @@ def calculate_halflife(alpha:float):
     """    
     return np.log(2)/alpha
 
-def calc_catchment_area(mean_discharge, coords, mean_precip=None, loss:float=0.5):
-        """Calculate the minimum catchment area from mean discharge and precipitation estimates.
-        This function calculates the minimum catchment area based on the provided mean discharge 
-        and precipitation values. If the mean precipitation is not provided, it is calculated 
-        using the Spartacus dataset and averaged over the observation period from 1990 to 2020. 
-        Evapotranspiration is considered in this calculation.
-        
-        Args:
-            mean_discharge (float): The mean discharge in liters per second (l/s).
-            coords (tuple): A tuple containing the latitude and longitude coordinates (lat, lon).
-            mean_precip (float, optional): The mean precipitation in millimeters per square meter (mm/m²). 
-                           If not provided, it will be calculated from the Spartacus dataset.
-            loss (float, optional): The fraction of precipitation lost to 
-            evapotranspiration, surface runoff, etc... (values from 0 to 1). Defaults to 0.5.
-        
-        Returns:
-            float: The calculated catchment area in square kilometers (km²).
-        
-        Example:
-            >>> mean_discharge = 500  # l/s
-            >>> coords = (47.0, 8.0)  # latitude and longitude
-            >>> calc_catchment_area(mean_discharge, coords)
-            Catchment area @ 500 l/s and 1000 mm/m² = 15.78 km²
-            15.78
-        """
-        t0 = pd.Timestamp('1991-01-01')
-        tn = pd.Timestamp('2020-01-01')
-        if mean_precip is None:
-
-            params = {
+def calc_catchment_area(mean_discharge, coords, std_discharge:float=0.0, mean_precip=None, loss:float=0.5):
+    """Calculate the minimum catchment area from mean discharge and precipitation estimates.
+    This function calculates the minimum catchment area based on the provided mean discharge 
+    and precipitation values. If the mean precipitation is not provided, it is calculated 
+    using the Spartacus dataset and averaged over the observation period from 1990 to 2020. 
+    Evapotranspiration is considered in this calculation.
+    
+    Args:
+        mean_discharge (float): The mean discharge in liters per second (l/s).
+        std_discharge (float): The standard deviation of the discharge in liters per second (l/s).
+        coords (tuple): A tuple containing the latitude and longitude coordinates (lat, lon).
+        mean_precip (float, optional): The mean precipitation in millimeters per square meter (mm/m²). 
+                       If not provided, it will be calculated from the Spartacus dataset.
+        loss (float, optional): The fraction of precipitation lost to 
+        evapotranspiration, surface runoff, etc... (values from 0 to 1). Defaults to 0.5.
+    
+    Returns:
+        tuple: The calculated catchment area in square kilometers (km²) and its uncertainty.
+    
+    Example:
+        >>> mean_discharge = 500  # l/s
+        >>> std_discharge = 50  # l/s
+        >>> coords = (47.0, 8.0)  # latitude and longitude
+        >>> calc_catchment_area(mean_discharge, std_discharge, coords)
+        Catchment area @ 500 l/s and 1000 mm/m² = 15.78 km² ± 1.58 km²
+        (15.78, 1.58)
+    """
+    t0 = pd.Timestamp('1991-01-01')
+    tn = pd.Timestamp('2020-01-01')
+    if mean_precip is None:
+        params = {
             "parameters": "RR",
             "start": t0,
             "end": tn,
@@ -351,13 +352,20 @@ def calc_catchment_area(mean_discharge, coords, mean_precip=None, loss:float=0.5
             "format": "json"
         }
         mean_precip = read_spartacus(params)['RR'].resample('Y').sum().mean()
-        seconds_in_year = 60 * 60 * 24 * 365
-        mean_discharge_lpy = mean_discharge * seconds_in_year
-        catchment_area = mean_discharge_lpy / (mean_precip * (1-loss))  # in m²
-        catchment_area = catchment_area / 1000 ** 2  # in km²
+    
+    seconds_in_year = 60 * 60 * 24 * 365
+    mean_discharge_lpy = mean_discharge * seconds_in_year
+    std_discharge_lpy = std_discharge * seconds_in_year
+    
+    catchment_area = mean_discharge_lpy / (mean_precip * (1 - loss))  # in m²
+    catchment_area = catchment_area / 1000 ** 2  # in km²
+    
+    # Propagate uncertainty
+    catchment_area_std = std_discharge_lpy / (mean_precip * (1 - loss))  # in m²
+    catchment_area_std = catchment_area_std / 1000 ** 2  # in km²
 
-        print(f'Catchment area @ Q = {mean_discharge:.0f} l/s , loss = {loss:.2f} and RR = {mean_precip:.0f} mm/m²: \n {catchment_area:.2f} km² ')
-        return catchment_area
+    print(f'Catchment area @ Q = {mean_discharge:.0f} ± {std_discharge:.0f} l/s , loss = {loss:.2f} and RR = {mean_precip:.0f} mm/m²: \n {catchment_area:.2f} ± {catchment_area_std:.2f} km²')
+    return catchment_area, catchment_area_std
     
 def compute_cross_correlation(ts1:pd.Series, ts2:pd.Series, 
                               plot:bool=False) -> Union[tuple, None]:
@@ -480,6 +488,101 @@ def boussinesq_model(t: float, Q0: float, alpha: float) -> float:
         float: Result of the Maillet equation.
     """
     return Q0 / (1+alpha*t)**2
+
+def read_geosphere(dataset: str, t0: pd.Timestamp, tn: pd.Timestamp, 
+                   latitude: float, longitude: float, parameters: list) -> pd.DataFrame:
+    """
+    Fetches point time series data from the GEOSPHERE API and returns it as a pandas DataFrame.
+    For a list of ressources refer to the API documentation at 
+    https://dataset.api.hub.geosphere.at/v1/docs/user-guide/resource.html#resources
+    
+    Parameters:
+    -----------
+    dataset : str
+        The dataset to fetch from the GEOSPHERE API. Must be one of the following:
+        'spartacus_daily', 'spartacus_monthly', 'spartacus_seasonal', 'spartacus_annual', 
+        'winfore_daily', 'snowgrid_daily'.
+    t0 : pd.Timestamp
+        The start timestamp for the data query.
+    tn : pd.Timestamp
+        The end timestamp for the data query.
+    latitude : float
+        The latitude coordinate for the data query.
+    longitude : float
+        The longitude coordinate for the data query.
+    parameters : list
+        A list of parameters to fetch from the dataset. Each parameter should be a string.
+        For a list of available parameters, refer to the documentation of the respective
+        geosphere austria dataset.
+
+    Returns:
+    --------
+    pd.DataFrame
+        A pandas DataFrame containing the requested geospatial time series data.
+
+    Raises:
+    -------
+    ValueError
+        If the specified dataset is not available.
+    """
+
+    # URL endpoints for the API
+    # SPARTACUS v2 reanalysis datasets
+    spartacus_daily = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/spartacus-v2-1d-1km"
+    spartacus_monthly = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/spartacus-v2-1m-1km"
+    spartacus_seasonal = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/spartacus-v2-1q-1km"
+    spartacus_annual = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/spartacus-v2-1y-1km"
+
+    # WINFORE v2
+    winfore_daily = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/winfore-v2-1d-1km"
+
+    # Snowgrid Climate v2
+    snowgrid_daily = "https://dataset.api.hub.geosphere.at/v1/timeseries/historical/snowgrid_cl-v2-1d-1km"
+
+    datasets = {
+        "spartacus_daily": spartacus_daily,
+        "spartacus_monthly": spartacus_monthly,
+        "spartacus_seasonal": spartacus_seasonal,
+        "spartacus_annual": spartacus_annual,
+        "winfore_daily": winfore_daily,
+        "snowgrid_daily": snowgrid_daily
+    }
+
+    # select dataset
+    if dataset not in datasets.keys():
+        raise ValueError(f"Dataset {dataset} not available. Choose from {datasets.keys()}")
+
+    url = datasets[dataset]
+
+    # Ensure parameters is a list of strings
+    if not all(isinstance(param, str) for param in parameters):
+        parameters = list(map(str, parameters))
+
+    # create API request parameters
+    params = {
+        "parameters": ','.join(parameters),
+        "start": t0,
+        "end": tn,
+        "lat_lon": f"{latitude},{longitude}",
+        "format": "json"
+    }
+
+    # Make the request to download the JSON data
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+    else:
+        print("Error:", response.status_code, response.text)
+        return None
+
+    # Create a pandas DataFrame from the JSON data
+    dic = {}
+    for param in parameters:
+        dic[param] = data['features'][0]['properties']['parameters'][param]['data']
+    df = pd.DataFrame(dic, pd.to_datetime(data['timestamps']))
+    df.index = df.index.tz_localize(None)
+    return df
 
 @suppress_print
 def read_spartacus(params:dict) -> pd.DataFrame:
