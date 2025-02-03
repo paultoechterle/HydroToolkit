@@ -346,14 +346,15 @@ def calc_catchment_area(mean_discharge, coords, std_discharge:float=0.0, mean_pr
     t0 = pd.Timestamp('1991-01-01')
     tn = pd.Timestamp('2020-01-01')
     if mean_precip is None:
-        params = {
-            "parameters": "RR",
-            "start": t0,
-            "end": tn,
-            "lat_lon": f"{coords[0]},{coords[1]}",
-            "format": "json"
-        }
-        mean_precip = read_spartacus(params)['RR'].resample('Y').sum().mean()
+        # params = {
+        #     "parameters": "RR",
+        #     "start": t0,
+        #     "end": tn,
+        #     "lat_lon": f"{coords[0]},{coords[1]}",
+        #     "format": "json"
+        # }
+        # mean_precip = read_spartacus(params)['RR'].resample('Y').sum().mean()
+        mean_precip = read_geosphere('spartacus_annual', t0, tn, coords, ['RR'])['RR'].mean()
     
     seconds_in_year = 60 * 60 * 24 * 365
     mean_discharge_lpy = mean_discharge * seconds_in_year
